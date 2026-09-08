@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ПикмиПицца</title>
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Google reCAPTCHA -->
+  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+</head>
+
+<body>
+
+  <div class="app">
+    <!-- ===== ХЕДЕР ===== -->
+    <header class="header">
+      <div class="logo-wrapper">
+        <div class="logo">
+          <span class="logo-icon">🍕✨</span>
+          <h1>ПикмиПицца</h1>
+        </div>
+        <div class="header-tagline">🍕 Доставка вкусной пиццы по всему городу</div>
+      </div>
+      <div class="header-actions">
+        <nav class="nav-menu">
+          <button class="nav-item active" data-page="catalog">🍕 Каталог</button>
+          <button class="nav-item" data-page="promo">🎁 Акции</button>
+          <button class="nav-item" data-page="contacts">📞 Контакты</button>
+        </nav>
+        <button class="profile-btn" id="profileBtn">
+          <span class="profile-icon">👤</span>
+          <span id="profileBtnText">Войти</span>
+        </button>
+        <button class="cart-link-btn" id="goToCartBtn">
+          <span class="cart-icon">🛒</span>
+          <span>Корзина</span>
+          <span class="cart-badge" id="cartBadge">0</span>
+        </button>
+      </div>
+    </header>
+
+    <section id="catalogPage">
+      <div class="category-tabs" id="categoryTabs">
+        <button class="category-tab active" data-category="pizza">🍕 Пицца</button>
+        <button class="category-tab" data-category="snacks">🍟 Закуски</button>
+        <button class="category-tab" data-category="drinks">🥤 Напитки</button>
+        <button class="category-tab" data-category="sauces">🌶️ Соусы</button>
+      </div>
+      <div class="catalog-title">
+        <span>🌅</span> Меню
+      </div>
+      <div class="pizza-grid" id="pizzaGrid"></div>
+    </section>
+
+    <section class="promo-page" id="promoPage">
+      <h2>🎁 Акции и скидки</h2>
+      <div class="promo-grid">
+        <div class="promo-card">
+          <div class="promo-icon">🎂</div>
+          <div class="promo-title">Скидка в день рождения</div>
+          <div class="promo-desc">Предъявите паспорт и получите скидку 10% на весь заказ, используйте промокод</div>
+          <div class="promo-code">ДР</div>
+        </div>
+        <div class="promo-card">
+          <div class="promo-icon">🏪</div>
+          <div class="promo-title">Скидка при самовывозе</div>
+          <div class="promo-desc">Забирайте заказ самостоятельно и получайте скидку 10%</div>
+        </div>
+        <div class="promo-card">
+          <div class="promo-icon">🎉</div>
+          <div class="promo-title">Пицца в подарок!</div>
+          <div class="promo-desc">При заказе от 2500 ₽ используйте промокод</div>
+          <div class="promo-code">ПИКМИ</div>
+          <div class="promo-desc" style="margin-top:8px;">и получите пиццу Маргарита в подарок!</div>
+        </div>
+      </div>
+      <button class="back-to-catalog" id="closePromoBtn" style="margin-top:24px;">← Вернуться в меню</button>
+    </section>
+
+    <section class="cart-page" id="cartPage">
+      <h2>🧺 Корзина</h2>
+
+      <div class="cart-list" id="cartList">
+        <div class="empty-cart-msg">Корзина пуста, но пицца ждёт 💫</div>
+      </div>
+
+      <div class="add-to-order-section">
+        <h3>➕ Добавить к заказу</h3>
+        <div class="add-to-order-grid" id="addToOrderGrid"></div>
+      </div>
+
+      <div class="payment-section">
+        <h3>💳 Оплата</h3>
+        <div class="payment-options" id="paymentOptions">
+          <button class="active" data-payment="online">💳 Онлайн</button>
+          <button data-payment="terminal">💳 Картой (терминал)</button>
+          <button data-payment="cash">💰 Наличными</button>
+        </div>
+        <div class="payment-detail" id="paymentDetail"></div>
+      </div>
+
+      <div class="bonus-section">
+        <label class="heart-checkbox">
+          <input type="checkbox" id="useBonuses">
+          <span class="heart-icon empty">🤍</span>
+          <span class="heart-icon filled">❤️</span>
+          <span class="heart-label">🎯 Списать бонусы</span>
+        </label>
+        <span class="bonus-info" id="bonusInfo">Доступно: 150 ₽</span>
+        <span class="bonus-info" id="bonusApplyInfo" style="display:none;color:#ffd700;">Бонусы применены</span>
+      </div>
+
+      <div class="promo-section">
+        <label>🎫 Промокод</label>
+        <input type="text" id="promoInput" placeholder="Введите промокод">
+        <button class="apply-btn" id="applyPromoBtn">Применить</button>
+        <div id="promoMessage" class="promo-message"></div>
+      </div>
+
+      <div class="delivery-section">
+        <h3>🚚 Способ получения</h3>
+        <div class="delivery-toggle" id="deliveryToggle">
+          <button class="active" data-type="delivery">Доставка</button>
+          <button data-type="pickup">Самовывоз</button>
+        </div>
+        <div id="deliveryAddressBlock">
+          <div style="position:relative;">
+            <input type="text" class="delivery-address-input" id="deliveryAddress" 
+              placeholder="Введите адрес доставки (начните вводить, появится список)">
+            <div id="addressSuggestions" class="address-suggestions"></div>
+          </div>
+          <div class="address-hint" id="addressHint">Начните вводить адрес для подсказок</div>
+        </div>
+      </div>
+
+      <div class="order-summary">
+        <h3>🧾 Сумма заказа</h3>
+        <div id="orderSummary"></div>
+      </div>
+
+      <button class="order-btn" id="orderBtn">Заказать</button>
+
+      <button class="back-to-catalog" id="backToCatalogBtn">← Вернуться в меню</button>
+    </section>
+
+    <section class="profile-page" id="profilePage">
+      <h2>👤 Личный кабинет</h2>
+
+      <div id="profileAuth" class="profile-auth">
+        <div class="auth-buttons">
+          <button class="auth-btn active" id="loginTab">Вход</button>
+          <button class="auth-btn" id="registerTab">Регистрация</button>
+        </div>
+
+        <div id="loginForm">
+          <input type="text" id="loginPhone" placeholder="Номер телефона" value="+7 999 123-45-67">
+          <input type="text" id="loginCode" placeholder="Код из SMS" value="1234">
+          <button class="login-btn" id="loginBtn">Войти</button>
+        </div>
+
+        <div id="registerForm" style="display:none;">
+          <input type="text" id="regName" placeholder="Имя" value="Анна">
+          <input type="text" id="regPhone" placeholder="Номер телефона" value="+7 999 123-45-67">
+          <button class="login-btn" id="registerBtn">Зарегистрироваться</button>
+        </div>
+      </div>
+
+      <div id="profileContent" class="profile-content">
+        <div class="profile-info">
+          <h3 style="color:#f0e6f0; margin-bottom:16px;">👤 Информация</h3>
+          <div class="info-item">
+            <span class="label">Имя</span>
+            <span class="value" id="profileNameDisplay">Анна</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Телефон</span>
+            <span class="value" id="profilePhoneDisplay">+7 999 123-45-67</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Бонусы</span>
+            <span class="value" id="bonusDisplay">150 ₽</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Скидка</span>
+            <span class="value" id="discountDisplay">5%</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Сохранённая карта</span>
+            <span class="value" id="savedCardDisplay">**** 4589</span>
+          </div>
+          <button class="logout-btn" id="logoutBtn">Выйти</button>
+        </div>
+
+        <div class="profile-orders">
+          <h3 style="color:#f0e6f0; margin-bottom:16px;">📦 История заказов</h3>
+          <div id="ordersList"></div>
+        </div>
+      </div>
+
+      <button class="back-to-catalog" id="closeProfileBtn" style="margin-top:20px;">← Вернуться в меню</button>
+    </section>
+  </div>
+
+  <!-- ===== ФУТЕР ===== -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-brand">
+        <span class="logo-icon">🍕✨</span>
+        <h2>ПикмиПицца</h2>
+      </div>
+
+      <div class="footer-links">
+        <button class="footer-link-btn" data-info="contacts">📞 Контакты</button>
+        <span class="footer-divider">|</span>
+        <button class="footer-link-btn" data-info="vacancies">💼 Вакансии</button>
+        <span class="footer-divider">|</span>
+        <button class="footer-link-btn" data-info="about">📖 О нас</button>
+        <span class="footer-divider">|</span>
+        <button class="footer-link-btn" data-info="delivery-info">🚚 Доставка</button>
+        <span class="footer-divider">|</span>
+        <button class="footer-link-btn" data-info="payment-info">💳 Оплата</button>
+      </div>
+
+      <button class="footer-feedback-btn" id="openFeedbackBtn">💬 Обратная связь</button>
+    </div>
+    <div class="footer-bottom">
+      © 2026 ПикмиПицца. Все права защищены. 🍕
+    </div>
+  </footer>
+
+  <!-- ===== СИСТЕМА УВЕДОМЛЕНИЙ ===== -->
+  <div class="notification-overlay" id="notificationOverlay">
+    <div class="notification-box">
+      <span class="notification-icon" id="notifIcon">✅</span>
+      <div class="notification-title" id="notifTitle">Успешно!</div>
+      <div class="notification-message" id="notifMessage">Операция выполнена успешно.</div>
+      <button class="notification-btn" id="notifBtn">Хорошо</button>
+    </div>
+  </div>
+
+  <!-- ===== МОДАЛКА ПИЦЦЫ ===== -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-box">
+      <h2>🍕 Настрой пиццу</h2>
+      <div class="modal-pizza-name" id="modalPizzaName">Маргарита</div>
+
+      <div style="font-weight:600; color:#f0e6f0; margin-bottom:6px;">Выбери размер:</div>
+      <div class="size-selector" id="sizeSelector">
+        <button class="size-btn" data-size="25" data-multiplier="0.85">
+          25 см
+          <span class="size-price"></span>
+        </button>
+        <button class="size-btn active" data-size="32" data-multiplier="1">
+          32 см
+          <span class="size-price"></span>
+        </button>
+        <button class="size-btn" data-size="40" data-multiplier="1.25">
+          40 см
+          <span class="size-price"></span>
+        </button>
+      </div>
+
+      <div class="toppings-section">
+        <label>🧄 Добавки :</label>
+        <div class="toppings-group" id="toppingsGroup">
+          <label class="heart-checkbox">
+            <input type="checkbox" value="грибы">
+            <span class="heart-icon empty">🤍</span>
+            <span class="heart-icon filled">❤️</span>
+            <span class="heart-label">Грибы</span>
+            <span class="heart-price">+30₽</span>
+          </label>
+          <label class="heart-checkbox">
+            <input type="checkbox" value="оливки">
+            <span class="heart-icon empty">🤍</span>
+            <span class="heart-icon filled">❤️</span>
+            <span class="heart-label">Оливки</span>
+            <span class="heart-price">+35₽</span>
+          </label>
+          <label class="heart-checkbox">
+            <input type="checkbox" value="бекон">
+            <span class="heart-icon empty">🤍</span>
+            <span class="heart-icon filled">❤️</span>
+            <span class="heart-label">Бекон</span>
+            <span class="heart-price">+60₽</span>
+          </label>
+          <label class="heart-checkbox">
+            <input type="checkbox" value="перец">
+            <span class="heart-icon empty">🤍</span>
+            <span class="heart-icon filled">❤️</span>
+            <span class="heart-label">Перец</span>
+            <span class="heart-price">+40₽</span>
+          </label>
+          <label class="heart-checkbox">
+            <input type="checkbox" value="сыр">
+            <span class="heart-icon empty">🤍</span>
+            <span class="heart-icon filled">❤️</span>
+            <span class="heart-label">Сыр</span>
+            <span class="heart-price">+30₽</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-cancel" id="modalCancelBtn">Отмена</button>
+        <button class="btn-add-to-cart" id="modalAddBtn">➕ В корзину</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== МОДАЛКА ОПЛАТЫ ===== -->
+  <div class="modal-overlay" id="paymentModal">
+    <div class="modal-box">
+      <h2>💳 Добавить карту</h2>
+      <div style="margin-bottom:20px;">
+        <label style="color:#f0e6f0;display:block;margin-bottom:8px;">Номер карты</label>
+        <input type="text" id="cardNumber" placeholder="0000 0000 0000 0000" maxlength="19"
+          style="width:100%;padding:12px 18px;border-radius:40px;border:1px solid rgba(255,150,200,0.15);background:rgba(255,255,255,0.05);color:#f0e6f0;font-size:1rem;margin-bottom:12px;">
+
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:120px;">
+            <label style="color:#f0e6f0;display:block;margin-bottom:8px;font-size:0.9rem;">Срок</label>
+            <input type="text" id="cardExpiry" placeholder="MM/YY" maxlength="5"
+              style="width:100%;padding:12px 18px;border-radius:40px;border:1px solid rgba(255,150,200,0.15);background:rgba(255,255,255,0.05);color:#f0e6f0;font-size:1rem;">
+          </div>
+          <div style="flex:1;min-width:120px;">
+            <label style="color:#f0e6f0;display:block;margin-bottom:8px;font-size:0.9rem;">CVV</label>
+            <input type="text" id="cardCvv" placeholder="***" maxlength="3"
+              style="width:100%;padding:12px 18px;border-radius:40px;border:1px solid rgba(255,150,200,0.15);background:rgba(255,255,255,0.05);color:#f0e6f0;font-size:1rem;">
+          </div>
+        </div>
+
+        <label class="heart-checkbox" style="margin-top:16px;">
+          <input type="checkbox" id="saveCard" checked>
+          <span class="heart-icon empty">🤍</span>
+          <span class="heart-icon filled">❤️</span>
+          <span class="heart-label">Сохранить карту для следующих заказов</span>
+        </label>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" id="paymentCancelBtn">Отмена</button>
+        <button class="btn-add-to-cart" id="paymentConfirmBtn">➕ Добавить</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== МОДАЛКА ОБРАТНОЙ СВЯЗИ ===== -->
+  <div class="modal-overlay feedback-modal" id="feedbackModal">
+    <div class="modal-box">
+      <h2>💬 Обратная связь</h2>
+      <form class="feedback-form" id="feedbackForm" novalidate>
+        <div class="form-group">
+          <label>Ваше имя <span class="required">*</span></label>
+          <input type="text" id="feedbackName" placeholder="Иван Иванов" required>
+          <div class="field-error" id="nameError">⚠️ Пожалуйста, введите ваше имя</div>
+        </div>
+
+        <div class="form-group">
+          <label>Телефон <span class="required">*</span></label>
+          <input type="tel" id="feedbackPhone" placeholder="+7 999 123-45-67" required>
+          <div class="field-error" id="phoneError">⚠️ Пожалуйста, введите номер телефона</div>
+        </div>
+
+        <div class="form-group">
+          <label>Сообщение <span class="required">*</span></label>
+          <textarea id="feedbackMessage" placeholder="Опишите ваш вопрос или пожелание..." required></textarea>
+          <div class="field-error" id="messageError">⚠️ Пожалуйста, напишите сообщение</div>
+        </div>
+
+        <div class="form-group">
+          <label>Подтверждение <span class="required">*</span></label>
+          <div class="g-recaptcha" data-sitekey="6LfaGLAtAAAAAOYIPQQ7naZ6IoQyHE_sw9e2frwf"></div>
+          <div class="field-error" id="recaptchaError">⚠️ Пожалуйста, подтвердите, что вы не робот</div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" id="feedbackCancelBtn">Отмена</button>
+          <button type="submit" class="submit-feedback-btn">✉️ Отправить</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== МОДАЛКА ИНФО ===== -->
+  <div class="modal-overlay info-modal" id="infoModal">
+    <div class="modal-box">
+      <h2 id="infoModalTitle">📞 Контакты</h2>
+      <div class="info-modal-content" id="infoModalContent"></div>
+      <div class="modal-actions">
+        <button class="btn-cancel" id="infoModalCloseBtn" style="width:100%;justify-content:center;">Закрыть</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/script.js"></script>
+</body>
+
+</html>
