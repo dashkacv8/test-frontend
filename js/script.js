@@ -1436,7 +1436,7 @@
     const message = feedbackMessage.value.trim();
 
     try {
-      const response = await fetch('http://localhost:3000/api/feedback', {
+      const response = await fetch('https://test-frontend-socr.onrender.com/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

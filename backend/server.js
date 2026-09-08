@@ -5,7 +5,7 @@ const bodyParser = require('body-parser');
 const path = require('path'); // ← ДОБАВИТЬ
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
@@ -76,7 +76,7 @@ app.post('/api/feedback', async (req, res) => {
 
 // ===== ЗАПУСК СЕРВЕРА =====
 app.listen(PORT, () => {
-  console.log(`🚀 Сервер запущен на http://localhost:${PORT}`);
+  console.log(`🚀 Сервер запущен на порту' +PORT);
   console.log(`📁 Отдаю файлы из: ${__dirname + '/..'}`);
   console.log(`📧 Почта настроена для: ${transporter.options.auth.user}`);
 });
