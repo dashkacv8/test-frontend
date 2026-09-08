@@ -76,7 +76,7 @@ app.post('/api/feedback', async (req, res) => {
 
 // ===== ЗАПУСК СЕРВЕРА =====
 app.listen(PORT, () => {
-  console.log(`🚀 Сервер запущен на порту' +PORT);
+  console.log(`🚀 Сервер запущен на порту ${PORT}`);
   console.log(`📁 Отдаю файлы из: ${__dirname + '/..'}`);
   console.log(`📧 Почта настроена для: ${transporter.options.auth.user}`);
 });

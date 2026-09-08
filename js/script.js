@@ -1145,7 +1145,7 @@
     clearFieldError(feedbackName, nameError);
     clearFieldError(feedbackPhone, phoneError);
     clearFieldError(feedbackMessage, messageError);
-    
+
     // Сброс reCAPTCHA
     if (typeof grecaptcha !== 'undefined') {
       grecaptcha.reset();
@@ -1179,50 +1179,50 @@
         locations: [{ city: 'Пермь' }]
       })
     })
-    .then(response => response.json())
-    .then(data => {
-      addressSuggestions.innerHTML = '';
+      .then(response => response.json())
+      .then(data => {
+        addressSuggestions.innerHTML = '';
 
-      if (!data.suggestions || data.suggestions.length === 0) {
-        addressSuggestions.classList.remove('show');
-        return;
-      }
+        if (!data.suggestions || data.suggestions.length === 0) {
+          addressSuggestions.classList.remove('show');
+          return;
+        }
 
-      data.suggestions.forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'suggestion-item';
+        data.suggestions.forEach(item => {
+          const div = document.createElement('div');
+          div.className = 'suggestion-item';
 
-        const address = item.value;
+          const address = item.value;
 
-        div.innerHTML = `
+          div.innerHTML = `
           <span>${address}</span>
           <span class="sub-text">📍 Выбрать этот адрес</span>
         `;
 
-        div.addEventListener('click', function() {
-          deliveryAddress.value = address;
-          deliveryAddress.classList.add('address-selected');
-          addressHint.textContent = `✅ Адрес выбран: ${address}`;
-          addressHint.className = 'address-hint success';
-          addressSuggestions.classList.remove('show');
-          updateSummary();
-          updateOrderButton();
+          div.addEventListener('click', function () {
+            deliveryAddress.value = address;
+            deliveryAddress.classList.add('address-selected');
+            addressHint.textContent = `✅ Адрес выбран: ${address}`;
+            addressHint.className = 'address-hint success';
+            addressSuggestions.classList.remove('show');
+            updateSummary();
+            updateOrderButton();
+          });
+
+          addressSuggestions.appendChild(div);
         });
 
-        addressSuggestions.appendChild(div);
+        addressSuggestions.classList.add('show');
+      })
+      .catch(err => {
+        console.error('Ошибка поиска:', err);
+        addressHint.textContent = '❌ Ошибка поиска. Попробуйте еще раз.';
+        addressHint.className = 'address-hint error';
       });
-
-      addressSuggestions.classList.add('show');
-    })
-    .catch(err => {
-      console.error('Ошибка поиска:', err);
-      addressHint.textContent = '❌ Ошибка поиска. Попробуйте еще раз.';
-      addressHint.className = 'address-hint error';
-    });
   }
 
   // ---------- СОБЫТИЯ ДЛЯ АДРЕСА ----------
-  deliveryAddress.addEventListener('input', function() {
+  deliveryAddress.addEventListener('input', function () {
     const query = this.value.trim();
 
     if (query.length === 0) {
@@ -1242,20 +1242,20 @@
     }
   });
 
-  deliveryAddress.addEventListener('blur', function() {
+  deliveryAddress.addEventListener('blur', function () {
     setTimeout(() => {
       addressSuggestions.classList.remove('show');
     }, 200);
   });
 
-  deliveryAddress.addEventListener('focus', function() {
+  deliveryAddress.addEventListener('focus', function () {
     const query = this.value.trim();
     if (query.length >= 3) {
       searchAddresses(query);
     }
   });
 
-  deliveryAddress.addEventListener('keydown', function(e) {
+  deliveryAddress.addEventListener('keydown', function (e) {
     if (e.key === 'Enter') {
       e.preventDefault();
       const query = this.value.trim();
@@ -1277,29 +1277,29 @@
             locations: [{ city: 'Пермь' }]
           })
         })
-        .then(response => response.json())
-        .then(data => {
-          if (data.suggestions && data.suggestions.length > 0) {
-            const address = data.suggestions[0].value;
+          .then(response => response.json())
+          .then(data => {
+            if (data.suggestions && data.suggestions.length > 0) {
+              const address = data.suggestions[0].value;
 
-            this.value = address;
-            this.classList.add('address-selected');
+              this.value = address;
+              this.classList.add('address-selected');
 
-            addressHint.textContent = `✅ Адрес найден: ${address}`;
-            addressHint.className = 'address-hint success';
-            addressSuggestions.classList.remove('show');
+              addressHint.textContent = `✅ Адрес найден: ${address}`;
+              addressHint.className = 'address-hint success';
+              addressSuggestions.classList.remove('show');
 
-            updateSummary();
-            updateOrderButton();
-          } else {
-            addressHint.textContent = '❌ Адрес не найден. Проверьте правильность ввода.';
+              updateSummary();
+              updateOrderButton();
+            } else {
+              addressHint.textContent = '❌ Адрес не найден. Проверьте правильность ввода.';
+              addressHint.className = 'address-hint error';
+            }
+          })
+          .catch(err => {
+            addressHint.textContent = '❌ Ошибка проверки адреса';
             addressHint.className = 'address-hint error';
-          }
-        })
-        .catch(err => {
-          addressHint.textContent = '❌ Ошибка проверки адреса';
-          addressHint.className = 'address-hint error';
-        });
+          });
       }
     }
   });
@@ -1326,7 +1326,7 @@
 
   // ---------- ОГРАНИЧЕНИЯ НА ВВОД В ОБРАТНОЙ СВЯЗИ ----------
   // Телефон — только цифры, +, пробелы, скобки, дефис
-  feedbackPhone.addEventListener('input', function() {
+  feedbackPhone.addEventListener('input', function () {
     // Разрешаем только цифры, +, пробелы, (, ), -
     this.value = this.value.replace(/[^0-9+\s()\-]/g, '');
     if (this.value.length > 18) {
@@ -1334,7 +1334,7 @@
     }
   });
 
-  feedbackPhone.addEventListener('keydown', function(e) {
+  feedbackPhone.addEventListener('keydown', function (e) {
     const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Home', 'End'];
     if (!/^[0-9]$/.test(e.key) && !allowedKeys.includes(e.key) && e.key !== '+' && e.key !== '(' && e.key !== ')' && e.key !== '-' && e.key !== ' ') {
       e.preventDefault();
@@ -1342,7 +1342,7 @@
   });
 
   // Имя — только буквы, пробелы, дефис
-  feedbackName.addEventListener('input', function() {
+  feedbackName.addEventListener('input', function () {
     this.value = this.value.replace(/[^а-яА-ЯёЁa-zA-Z\s\-]/g, '');
     if (this.value.length > 50) {
       this.value = this.value.slice(0, 50);
@@ -1350,7 +1350,7 @@
   });
 
   // Сообщение — ограничение длины
-  feedbackMessage.addEventListener('input', function() {
+  feedbackMessage.addEventListener('input', function () {
     if (this.value.length > 1000) {
       this.value = this.value.slice(0, 1000);
     }
@@ -1436,7 +1436,7 @@
     const message = feedbackMessage.value.trim();
 
     try {
-      const response = await fetch('https://test-frontend-socr.onrender.com/', {
+      const response = await fetch('https://test-frontend-socr.onrender.com/api/feedback', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1447,7 +1447,7 @@
       const data = await response.json();
 
       if (data.success) {
-        showNotification('success', '✅ Сообщение отправлено', 
+        showNotification('success', '✅ Сообщение отправлено',
           `Спасибо, ${name}! Мы свяжемся с вами в ближайшее время.`);
         if (typeof grecaptcha !== 'undefined') {
           grecaptcha.reset();
