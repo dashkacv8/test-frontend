@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="css/style.css">
   <!-- Google reCAPTCHA -->
   <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+  <link rel="icon" type="image/x-icon" href="img/pngtree-heart-pizza-with-salami-png-image_20830282.png">
 </head>
 
 <body>
@@ -17,7 +18,7 @@
     <header class="header">
       <div class="logo-wrapper">
         <div class="logo">
-          <span class="logo-icon">🍕✨</span>
+          <img src="img/pngtree-heart-pizza-with-salami-png-image_20830282.png" alt="ПикмиПицца" class="logo-img">
           <h1>ПикмиПицца</h1>
         </div>
         <div class="header-tagline">🍕 Доставка вкусной пиццы по всему городу</div>
@@ -55,12 +56,24 @@
 
     <section class="promo-page" id="promoPage">
       <h2>🎁 Акции и скидки</h2>
+
+      <div class="promo-hero">
+        <div class="promo-hero-text">
+          <div class="promo-hero-title">⏰ Счастливые часы</div>
+          <div class="promo-hero-desc">Скидка 15% на все заказы каждый день с 14:00 до 16:00. Успей заказать!</div>
+        </div>
+        <div class="promo-hero-countdown">
+          <div class="countdown-label">До конца акции сегодня</div>
+          <div class="countdown-timer" id="happyHourCountdown">--:--:--</div>
+        </div>
+      </div>
+
       <div class="promo-grid">
         <div class="promo-card">
           <div class="promo-icon">🎂</div>
           <div class="promo-title">Скидка в день рождения</div>
           <div class="promo-desc">Предъявите паспорт и получите скидку 10% на весь заказ, используйте промокод</div>
-          <div class="promo-code">ДР</div>
+          <div class="promo-code" data-copy title="Нажмите, чтобы скопировать">ДР</div>
         </div>
         <div class="promo-card">
           <div class="promo-icon">🏪</div>
@@ -71,8 +84,20 @@
           <div class="promo-icon">🎉</div>
           <div class="promo-title">Пицца в подарок!</div>
           <div class="promo-desc">При заказе от 2500 ₽ используйте промокод</div>
-          <div class="promo-code">ПИКМИ</div>
+          <div class="promo-code" data-copy title="Нажмите, чтобы скопировать">ПИКМИ</div>
           <div class="promo-desc" style="margin-top:8px;">и получите пиццу Маргарита в подарок!</div>
+        </div>
+        <div class="promo-card">
+          <div class="promo-icon">🍕🍟🥤</div>
+          <div class="promo-title">Комбо дня</div>
+          <div class="promo-desc">Любая пицца + закуска + напиток дешевле на 15% при заказе одним чеком</div>
+          <div class="promo-code" data-copy title="Нажмите, чтобы скопировать">КОМБО15</div>
+        </div>
+        <div class="promo-card">
+          <div class="promo-icon">👥</div>
+          <div class="promo-title">Приведи друга</div>
+          <div class="promo-desc">Друг получает скидку 10% на первый заказ, а ты — 100 бонусов после его заказа</div>
+          <div class="promo-code" data-copy title="Нажмите, чтобы скопировать">ДРУГ100</div>
         </div>
       </div>
       <button class="back-to-catalog" id="closePromoBtn" style="margin-top:24px;">← Вернуться в меню</button>
@@ -126,7 +151,7 @@
         </div>
         <div id="deliveryAddressBlock">
           <div style="position:relative;">
-            <input type="text" class="delivery-address-input" id="deliveryAddress" 
+            <input type="text" class="delivery-address-input" id="deliveryAddress"
               placeholder="Введите адрес доставки (начните вводить, появится список)">
             <div id="addressSuggestions" class="address-suggestions"></div>
           </div>
@@ -204,25 +229,24 @@
 
   <!-- ===== ФУТЕР ===== -->
   <footer class="footer">
-    <div class="footer-content">
-      <div class="footer-brand">
-        <span class="logo-icon">🍕✨</span>
-        <h2>ПикмиПицца</h2>
-      </div>
+    <div class="footer-brand">
+      <img src="img/pngtree-heart-pizza-with-salami-png-image_20830282.png" alt="ПикмиПицца" class="logo-img">
+      <h2>ПикмиПицца</h2>
+    </div>
 
-      <div class="footer-links">
-        <button class="footer-link-btn" data-info="contacts">📞 Контакты</button>
-        <span class="footer-divider">|</span>
-        <button class="footer-link-btn" data-info="vacancies">💼 Вакансии</button>
-        <span class="footer-divider">|</span>
-        <button class="footer-link-btn" data-info="about">📖 О нас</button>
-        <span class="footer-divider">|</span>
-        <button class="footer-link-btn" data-info="delivery-info">🚚 Доставка</button>
-        <span class="footer-divider">|</span>
-        <button class="footer-link-btn" data-info="payment-info">💳 Оплата</button>
-      </div>
+    <div class="footer-links">
+      <button class="footer-link-btn" data-info="contacts">📞 Контакты</button>
+      <span class="footer-divider">|</span>
+      <button class="footer-link-btn" data-info="vacancies">💼 Вакансии</button>
+      <span class="footer-divider">|</span>
+      <button class="footer-link-btn" data-info="about">📖 О нас</button>
+      <span class="footer-divider">|</span>
+      <button class="footer-link-btn" data-info="delivery-info">🚚 Доставка</button>
+      <span class="footer-divider">|</span>
+      <button class="footer-link-btn" data-info="payment-info">💳 Оплата</button>
+    </div>
 
-      <button class="footer-feedback-btn" id="openFeedbackBtn">💬 Обратная связь</button>
+    <button class="footer-feedback-btn" id="openFeedbackBtn">💬 Обратная связь</button>
     </div>
     <div class="footer-bottom">
       © 2026 ПикмиПицца. Все права защищены. 🍕
@@ -389,6 +413,34 @@
       <div class="info-modal-content" id="infoModalContent"></div>
       <div class="modal-actions">
         <button class="btn-cancel" id="infoModalCloseBtn" style="width:100%;justify-content:center;">Закрыть</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== МОДАЛКА СТАТУСА ЗАКАЗА ===== -->
+  <div class="modal-overlay" id="orderStatusModal">
+    <div class="modal-box order-status-box">
+      <h2>📦 Статус заказа <span id="statusOrderId"></span></h2>
+      <div class="order-status-track" id="orderStatusTrack">
+        <div class="status-step active" data-step="1">
+          <div class="status-icon">👨‍🍳</div>
+          <div class="status-label">Готовится</div>
+        </div>
+        <div class="status-line" id="statusLine1"></div>
+        <div class="status-step" data-step="2">
+          <div class="status-icon" id="statusIcon2">🚗</div>
+          <div class="status-label" id="statusLabel2">В пути</div>
+        </div>
+        <div class="status-line" id="statusLine2"></div>
+        <div class="status-step" data-step="3">
+          <div class="status-icon" id="statusIcon3">✅</div>
+          <div class="status-label" id="statusLabel3">Доставлено</div>
+        </div>
+      </div>
+      <div class="order-status-message" id="orderStatusMessage">Приняли ваш заказ, начинаем готовить 🍕</div>
+      <div class="modal-actions">
+        <button class="btn-add-to-cart" id="orderStatusCloseBtn"
+          style="width:100%;justify-content:center;">Хорошо</button>
       </div>
     </div>
   </div>

@@ -141,6 +141,16 @@
   const infoModalContent = document.getElementById('infoModalContent');
   const infoModalCloseBtn = document.getElementById('infoModalCloseBtn');
 
+  const orderStatusModal = document.getElementById('orderStatusModal');
+  const statusOrderId = document.getElementById('statusOrderId');
+  const orderStatusTrack = document.getElementById('orderStatusTrack');
+  const statusIcon2 = document.getElementById('statusIcon2');
+  const statusLabel2 = document.getElementById('statusLabel2');
+  const statusLine1 = document.getElementById('statusLine1');
+  const statusLine2 = document.getElementById('statusLine2');
+  const orderStatusMessage = document.getElementById('orderStatusMessage');
+  const orderStatusCloseBtn = document.getElementById('orderStatusCloseBtn');
+
   const feedbackModal = document.getElementById('feedbackModal');
   const feedbackForm = document.getElementById('feedbackForm');
   const feedbackCancelBtn = document.getElementById('feedbackCancelBtn');
@@ -164,7 +174,9 @@
   const notifBtn = document.getElementById('notifBtn');
 
   // ---------- СИСТЕМА УВЕДОМЛЕНИЙ ----------
-  function showNotification(type, title, message) {
+  let notifOnClose = null;
+
+  function showNotification(type, title, message, onClose) {
     const types = {
       success: { icon: '✅', btnClass: 'success-btn' },
       error: { icon: '❌', btnClass: 'error-btn' },
@@ -178,10 +190,16 @@
     notifMessage.innerHTML = message;
     notifBtn.className = 'notification-btn ' + config.btnClass;
     notifOverlay.classList.add('open');
+    notifOnClose = typeof onClose === 'function' ? onClose : null;
   }
 
   function closeNotification() {
     notifOverlay.classList.remove('open');
+    if (notifOnClose) {
+      const cb = notifOnClose;
+      notifOnClose = null;
+      cb();
+    }
   }
 
   notifBtn.addEventListener('click', closeNotification);
@@ -305,7 +323,7 @@
           if (category === 'pizza') {
             openModal(item.id);
           } else {
-            addNonPizzaToCart(item, category);
+            addNonPizzaToCart(item, category, e.currentTarget);
           }
         });
       }
@@ -317,7 +335,7 @@
           if (category === 'pizza') {
             openModal(item.id);
           } else {
-            addNonPizzaToCart(item, category);
+            addNonPizzaToCart(item, category, e.currentTarget);
           }
         });
       }
@@ -334,8 +352,40 @@
     });
   }
 
+  // ---------- АНИМАЦИЯ ДОБАВЛЕНИЯ В КОРЗИНУ ----------
+  function flyToCart(sourceEl, emoji) {
+    if (!sourceEl || !goToCartBtn) return;
+    const startRect = sourceEl.getBoundingClientRect();
+    const endRect = goToCartBtn.getBoundingClientRect();
+
+    const flyer = document.createElement('div');
+    flyer.className = 'fly-to-cart';
+    flyer.textContent = emoji || '🍕';
+    flyer.style.left = (startRect.left + startRect.width / 2 - 14) + 'px';
+    flyer.style.top = (startRect.top + startRect.height / 2 - 14) + 'px';
+    flyer.style.opacity = '1';
+    document.body.appendChild(flyer);
+
+    requestAnimationFrame(() => {
+      const dx = (endRect.left + endRect.width / 2) - (startRect.left + startRect.width / 2);
+      const dy = (endRect.top + endRect.height / 2) - (startRect.top + startRect.height / 2);
+      flyer.style.transform = `translate(${dx}px, ${dy}px) scale(0.3)`;
+      flyer.style.opacity = '0.2';
+    });
+
+    setTimeout(() => {
+      flyer.remove();
+      goToCartBtn.classList.add('bump');
+      cartBadge.classList.add('bump');
+      setTimeout(() => {
+        goToCartBtn.classList.remove('bump');
+        cartBadge.classList.remove('bump');
+      }, 400);
+    }, 550);
+  }
+
   // ---------- ДОБАВЛЕНИЕ/УДАЛЕНИЕ ТОВАРОВ ----------
-  function addNonPizzaToCart(item, category) {
+  function addNonPizzaToCart(item, category, sourceEl) {
     const existing = cart.find(ci => ci.id === item.id && !ci.isPizza);
     if (existing) {
       existing.quantity += 1;
@@ -351,6 +401,7 @@
         category: category
       });
     }
+    if (sourceEl) flyToCart(sourceEl, item.emoji || '🍕');
     renderCatalog(currentCategory);
     renderCart();
     updateBadge();
@@ -450,6 +501,7 @@
       });
     }
 
+    flyToCart(modalAddBtn, currentPizza.emoji || '🍕');
     closeModal();
     renderCatalog(currentCategory);
     renderCart();
@@ -473,8 +525,8 @@
           <button class="add-btn" data-id="${item.id}">+</button>
         `;
 
-      div.querySelector('.add-btn').addEventListener('click', () => {
-        addNonPizzaToCart(item, item.category);
+      div.querySelector('.add-btn').addEventListener('click', (e) => {
+        addNonPizzaToCart(item, item.category, e.currentTarget);
       });
 
       addToOrderGrid.appendChild(div);
@@ -762,6 +814,75 @@
     updatePaymentUI();
   }
 
+  // ---------- СТАТУС ЗАКАЗА ----------
+  const ORDER_STATUS_LABELS = {
+    delivery: {
+      step2icon: '🚗', step2label: 'В пути',
+      step3icon: '✅', step3label: 'Доставлено',
+      msgStep1: 'Приняли ваш заказ, начинаем готовить 🍕',
+      msgStep2: 'Курьер уже в пути к вам 🚗',
+      msgStep3: 'Заказ доставлен! Приятного аппетита 🎉'
+    },
+    pickup: {
+      step2icon: '📦', step2label: 'Готово к выдаче',
+      step3icon: '✅', step3label: 'Заказ получен',
+      msgStep1: 'Приняли ваш заказ, начинаем готовить 🍕',
+      msgStep2: 'Заказ готов, ждём вас в пиццерии 📦',
+      msgStep3: 'Заказ получен! Спасибо, что выбрали нас 🎉'
+    }
+  };
+
+  function startOrderStatusFlow(order, type) {
+    const labels = ORDER_STATUS_LABELS[type] || ORDER_STATUS_LABELS.delivery;
+    statusOrderId.textContent = '#' + order.id;
+    statusIcon2.textContent = labels.step2icon;
+    statusLabel2.textContent = labels.step2label;
+    document.getElementById('statusIcon3').textContent = labels.step3icon;
+    document.getElementById('statusLabel3').textContent = labels.step3label;
+
+    const steps = orderStatusTrack.querySelectorAll('.status-step');
+    steps.forEach((s, i) => s.classList.toggle('active', i === 0));
+    steps.forEach(s => s.classList.remove('done'));
+    statusLine1.classList.remove('filled');
+    statusLine2.classList.remove('filled');
+    orderStatusMessage.textContent = labels.msgStep1;
+    order.status = 'preparing';
+
+    orderStatusModal.classList.add('open');
+
+    const t1 = setTimeout(() => {
+      steps[0].classList.add('done');
+      steps[1].classList.add('active');
+      statusLine1.classList.add('filled');
+      orderStatusMessage.textContent = labels.msgStep2;
+      order.status = 'onTheWay';
+      if (isLoggedIn) updateProfileUI();
+    }, 4000);
+
+    const t2 = setTimeout(() => {
+      steps[1].classList.add('done');
+      steps[2].classList.add('active', 'done');
+      statusLine2.classList.add('filled');
+      orderStatusMessage.textContent = labels.msgStep3;
+      order.status = 'delivered';
+      if (isLoggedIn) updateProfileUI();
+    }, 8000);
+
+    orderStatusModal._timers = [t1, t2];
+  }
+
+  function closeOrderStatusModal() {
+    orderStatusModal.classList.remove('open');
+    if (orderStatusModal._timers) {
+      orderStatusModal._timers.forEach(clearTimeout);
+    }
+  }
+
+  orderStatusCloseBtn.addEventListener('click', closeOrderStatusModal);
+  orderStatusModal.addEventListener('click', (e) => {
+    if (e.target === orderStatusModal) closeOrderStatusModal();
+  });
+
   // ---------- ОФОРМЛЕНИЕ ЗАКАЗА ----------
   function completeOrder() {
     const { total, discount, freeItem, bonusDiscount, deliveryFee } = getCartTotalWithFactors();
@@ -781,18 +902,21 @@
       cash: 'Наличными'
     };
 
+    const newOrder = {
+      id: userData.orders.length + 1,
+      date: new Date().toLocaleDateString('ru-RU'),
+      items: orderItems,
+      total: finalTotal,
+      bonus: bonusEarned,
+      status: 'preparing'
+    };
+
     let bonusText = '';
     if (isLoggedIn) {
       userData.bonuses += bonusEarned - bonusDiscount;
       if (userData.bonuses < 0) userData.bonuses = 0;
       bonusText = `\nБонус начислен: ${bonusEarned} ₽\nВсего бонусов: ${userData.bonuses} ₽`;
-      userData.orders.unshift({
-        id: userData.orders.length + 1,
-        date: new Date().toLocaleDateString('ru-RU'),
-        items: orderItems,
-        total: finalTotal,
-        bonus: bonusEarned
-      });
+      userData.orders.unshift(newOrder);
     }
 
     let cashDetail = '';
@@ -825,7 +949,10 @@
     message += `\n\n<span class="highlight">Состав заказа:</span>\n${orderItems}\n\n`;
     message += `<span class="success-text">Спасибо за заказ! 🍕</span>`;
 
-    showNotification('gold', '🎉 Заказ оформлен!', message);
+    const orderedDeliveryType = deliveryType;
+    showNotification('gold', '🎉 Заказ оформлен!', message, () => {
+      startOrderStatusFlow(newOrder, orderedDeliveryType);
+    });
 
     cart = [];
     promoApplied = false;
@@ -994,7 +1121,13 @@
       if (userData.orders.length === 0) {
         ordersList.innerHTML = '<div style="color:#806a80;text-align:center;padding:20px;">У вас пока нет заказов</div>';
       } else {
+        const statusBadges = {
+          preparing: { text: '👨‍🍳 Готовится', color: '#ffb347' },
+          onTheWay: { text: '🚗 В пути / Готово к выдаче', color: '#7db8ff' },
+          delivered: { text: '✅ Завершён', color: '#7ddfa0' }
+        };
         userData.orders.forEach(order => {
+          const badge = statusBadges[order.status] || statusBadges.delivered;
           const div = document.createElement('div');
           div.className = 'order-item';
           div.innerHTML = `
@@ -1004,6 +1137,7 @@
               </div>
               <div class="order-details">${order.items}</div>
               <div class="order-details" style="color:#7ddfa0;">Сумма: ${order.total} ₽ | Бонус: +${order.bonus} ₽</div>
+              <div class="order-details" style="color:${badge.color};font-weight:600;">${badge.text}</div>
             `;
           ordersList.appendChild(div);
         });
@@ -1614,6 +1748,43 @@
   document.getElementById('regPhone').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') register();
   });
+
+  // ---------- ПРОМОКОДЫ: КОПИРОВАНИЕ ПО КЛИКУ ----------
+  document.querySelectorAll('.promo-code[data-copy]').forEach(codeEl => {
+    codeEl.addEventListener('click', () => {
+      const text = codeEl.textContent.trim();
+      const done = () => {
+        codeEl.classList.add('copied');
+        showNotification('success', '📋 Скопировано', `Промокод <b>${text}</b> скопирован в буфер обмена`);
+        setTimeout(() => codeEl.classList.remove('copied'), 1500);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done).catch(done);
+      } else {
+        done();
+      }
+    });
+  });
+
+  // ---------- ТАЙМЕР "СЧАСТЛИВЫЕ ЧАСЫ" (14:00–16:00) ----------
+  const happyHourEl = document.getElementById('happyHourCountdown');
+  if (happyHourEl) {
+    function updateHappyHourCountdown() {
+      const now = new Date();
+      const end = new Date(now);
+      end.setHours(16, 0, 0, 0);
+      if (now >= end) {
+        end.setDate(end.getDate() + 1);
+      }
+      const diff = end - now;
+      const h = String(Math.floor(diff / 3600000)).padStart(2, '0');
+      const m = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
+      const s = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
+      happyHourEl.textContent = `${h}:${m}:${s}`;
+    }
+    updateHappyHourCountdown();
+    setInterval(updateHappyHourCountdown, 1000);
+  }
 
   // ---------- ИНИЦИАЛИЗАЦИЯ ----------
   renderAddToOrder();
