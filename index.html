@@ -6,6 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ПикмиПицца</title>
   <link rel="stylesheet" href="css/style.css">
+  <!-- Leaflet (карта точек самовывоза) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <!-- Google reCAPTCHA -->
   <script src="https://www.google.com/recaptcha/api.js" async defer></script>
   <link rel="icon" type="image/x-icon" href="img/pngtree-heart-pizza-with-salami-png-image_20830282.png">
@@ -27,8 +29,12 @@
         <nav class="nav-menu">
           <button class="nav-item active" data-page="catalog">🍕 Каталог</button>
           <button class="nav-item" data-page="promo">🎁 Акции</button>
+          <button class="nav-item" data-page="faq">❓ FAQ</button>
+          <button class="nav-item" data-page="map">🗺️ Точки</button>
           <button class="nav-item" data-page="contacts">📞 Контакты</button>
         </nav>
+        <button class="theme-toggle-btn" id="themeToggleBtn" title="Переключить тему"
+          aria-label="Переключить светлую/тёмную тему">🌙</button>
         <button class="profile-btn" id="profileBtn">
           <span class="profile-icon">👤</span>
           <span id="profileBtnText">Войти</span>
@@ -44,6 +50,7 @@
     <section id="catalogPage">
       <div class="category-tabs" id="categoryTabs">
         <button class="category-tab active" data-category="pizza">🍕 Пицца</button>
+        <button class="category-tab" data-category="combo">🎉 Комбо</button>
         <button class="category-tab" data-category="snacks">🍟 Закуски</button>
         <button class="category-tab" data-category="drinks">🥤 Напитки</button>
         <button class="category-tab" data-category="sauces">🌶️ Соусы</button>
@@ -57,13 +64,14 @@
     <section class="promo-page" id="promoPage">
       <h2>🎁 Акции и скидки</h2>
 
-      <div class="promo-hero">
+      <div class="promo-hero" id="happyHourBanner">
         <div class="promo-hero-text">
+          <div class="promo-hero-status" id="happyHourStatus">🟢 Акция активна сейчас</div>
           <div class="promo-hero-title">⏰ Счастливые часы</div>
           <div class="promo-hero-desc">Скидка 15% на все заказы каждый день с 14:00 до 16:00. Успей заказать!</div>
         </div>
         <div class="promo-hero-countdown">
-          <div class="countdown-label">До конца акции сегодня</div>
+          <div class="countdown-label" id="happyHourCountdownLabel">До конца акции сегодня</div>
           <div class="countdown-timer" id="happyHourCountdown">--:--:--</div>
         </div>
       </div>
@@ -102,6 +110,82 @@
       </div>
       <button class="back-to-catalog" id="closePromoBtn" style="margin-top:24px;">← Вернуться в меню</button>
     </section>
+
+    <section class="faq-page" id="faqPage">
+      <h2>❓ Часто задаваемые вопросы</h2>
+      <div class="faq-list" id="faqList">
+        <div class="faq-item">
+          <button class="faq-question">Как долго готовится и доставляется заказ?<span
+              class="faq-arrow">▾</span></button>
+          <div class="faq-answer">Приготовление занимает 15–20 минут, доставка по городу — в среднем 30–45 минут в
+            зависимости от района и загруженности.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-question">Какая минимальная сумма заказа?<span class="faq-arrow">▾</span></button>
+          <div class="faq-answer">Минимальная сумма для доставки — 500 ₽. При самовывозе минимальной суммы нет.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-question">Какие способы оплаты доступны?<span class="faq-arrow">▾</span></button>
+          <div class="faq-answer">Можно оплатить картой онлайн при оформлении заказа, а также наличными или картой
+            курьеру при доставке.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-question">Можно ли отменить или изменить заказ?<span class="faq-arrow">▾</span></button>
+          <div class="faq-answer">Да, отменить или изменить состав заказа можно в течение 5 минут после оформления —
+            напишите нам через форму обратной связи или позвоните по телефону из раздела «Контакты».</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-question">Указываете ли вы состав и аллергены?<span class="faq-arrow">▾</span></button>
+          <div class="faq-answer">Полный состав каждой позиции указан в карточке товара. Если у вас аллергия — уточните
+            у оператора при оформлении, мы постараемся адаптировать состав.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-question">Как накапливаются и списываются бонусы?<span class="faq-arrow">▾</span></button>
+          <div class="faq-answer">С каждого заказа начисляется бонус в размере 5% от суммы. Бонусами можно оплатить до
+            50% следующего заказа — подробнее в личном кабинете.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-question">В какие районы осуществляется доставка?<span class="faq-arrow">▾</span></button>
+          <div class="faq-answer">Доставляем по всему городу в пределах кольцевой. Точный адрес и зону доставки можно
+            проверить при оформлении заказа.</div>
+        </div>
+      </div>
+      <button class="back-to-catalog" id="closeFaqBtn" style="margin-top:24px;">← Вернуться в меню</button>
+    </section>
+
+    <section class="map-page" id="mapPage">
+      <h2>🗺️ Точки самовывоза и доставки</h2>
+      <div id="pickupMap" class="pickup-map"></div>
+      <div class="map-points-list" id="mapPointsList"></div>
+      <button class="back-to-catalog" id="closeMapBtn" style="margin-top:24px;">← Вернуться в меню</button>
+    </section>
+
+    <!-- ===== МОДАЛКА ОТЗЫВОВ ===== -->
+    <div class="modal-overlay reviews-modal" id="reviewsModal">
+      <div class="modal-box">
+        <h2 id="reviewsModalTitle">Отзывы</h2>
+        <div class="reviews-summary">
+          <div>
+            <div class="reviews-avg" id="reviewsAvg">5.0</div>
+          </div>
+          <div>
+            <div class="reviews-avg-stars" id="reviewsAvgStars">★★★★★</div>
+            <div class="reviews-count" id="reviewsCount">0 отзывов</div>
+          </div>
+        </div>
+        <div id="reviewsList"></div>
+        <div class="add-review-form">
+          <input type="text" id="reviewAuthorInput" placeholder="Ваше имя" maxlength="40">
+          <div class="star-picker" id="reviewStarPicker">
+            <span data-val="1">★</span><span data-val="2">★</span><span data-val="3">★</span><span
+              data-val="4">★</span><span data-val="5">★</span>
+          </div>
+          <textarea id="reviewTextInput" placeholder="Ваш отзыв о пицце..." rows="3" maxlength="300"></textarea>
+          <button class="btn-add-to-cart" id="reviewSubmitBtn"
+            style="width:100%;justify-content:center;margin-top:10px;">Оставить отзыв</button>
+        </div>
+      </div>
+    </div>
 
     <section class="cart-page" id="cartPage">
       <h2>🧺 Корзина</h2>
@@ -156,6 +240,10 @@
             <div id="addressSuggestions" class="address-suggestions"></div>
           </div>
           <div class="address-hint" id="addressHint">Начните вводить адрес для подсказок</div>
+        </div>
+        <div id="pickupAddressBlock" style="display:none;">
+          <div class="pickup-points-list" id="pickupPointsList"></div>
+          <input type="hidden" id="pickupAddress">
         </div>
       </div>
 
@@ -229,24 +317,25 @@
 
   <!-- ===== ФУТЕР ===== -->
   <footer class="footer">
-    <div class="footer-brand">
-      <img src="img/pngtree-heart-pizza-with-salami-png-image_20830282.png" alt="ПикмиПицца" class="logo-img">
-      <h2>ПикмиПицца</h2>
-    </div>
+    <div class="footer-content">
+      <div class="footer-brand">
+        <img src="img/pngtree-heart-pizza-with-salami-png-image_20830282.png" alt="ПикмиПицца" class="logo-img">
+        <h2>ПикмиПицца</h2>
+      </div>
 
-    <div class="footer-links">
-      <button class="footer-link-btn" data-info="contacts">📞 Контакты</button>
-      <span class="footer-divider">|</span>
-      <button class="footer-link-btn" data-info="vacancies">💼 Вакансии</button>
-      <span class="footer-divider">|</span>
-      <button class="footer-link-btn" data-info="about">📖 О нас</button> 
-      <span class="footer-divider">|</span>
-      <button class="footer-link-btn" data-info="delivery-info">🚚 Доставка</button>
-      <span class="footer-divider">|</span>
-      <button class="footer-link-btn" data-info="payment-info">💳 Оплата</button>
-    </div>
+      <div class="footer-links">
+        <button class="footer-link-btn" data-info="contacts">📞 Контакты</button>
+        <span class="footer-divider">|</span>
+        <button class="footer-link-btn" data-info="vacancies">💼 Вакансии</button>
+        <span class="footer-divider">|</span>
+        <button class="footer-link-btn" data-info="about">📖 О нас</button>
+        <span class="footer-divider">|</span>
+        <button class="footer-link-btn" data-info="delivery-info">🚚 Доставка</button>
+        <span class="footer-divider">|</span>
+        <button class="footer-link-btn" data-info="payment-info">💳 Оплата</button>
+      </div>
 
-    <button class="footer-feedback-btn" id="openFeedbackBtn">💬 Обратная связь</button>
+      <button class="footer-feedback-btn" id="openFeedbackBtn">💬 Обратная связь</button>
     </div>
     <div class="footer-bottom">
       © 2026 ПикмиПицца. Все права защищены. 🍕
@@ -327,6 +416,7 @@
       </div>
 
       <div class="modal-actions">
+        <div class="modal-live-price" id="modalLivePrice">0 ₽</div>
         <button class="btn-cancel" id="modalCancelBtn">Отмена</button>
         <button class="btn-add-to-cart" id="modalAddBtn">➕ В корзину</button>
       </div>
@@ -384,6 +474,12 @@
           <label>Телефон <span class="required">*</span></label>
           <input type="tel" id="feedbackPhone" placeholder="+7 999 123-45-67" required>
           <div class="field-error" id="phoneError">⚠️ Пожалуйста, введите номер телефона</div>
+        </div>
+
+        <div class="form-group">
+          <label>Email <span class="required">*</span></label>
+          <input type="email" id="feedbackEmail" placeholder="you@example.com" required>
+          <div class="field-error" id="emailError">⚠️ Пожалуйста, введите корректный email</div>
         </div>
 
         <div class="form-group">
@@ -445,6 +541,7 @@
     </div>
   </div>
 
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="js/script.js"></script>
 </body>
 

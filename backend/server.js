@@ -31,9 +31,9 @@ const transporter = nodemailer.createTransport({
 app.post('/api/feedback', async (req, res) => {
   console.log('📩 Получен запрос:', req.body);
 
-  const { name, phone, message } = req.body;
+  const { name, phone, email, message } = req.body; // ← ДОБАВИТЬ email
 
-  if (!name || !phone || !message) {
+  if (!name || !phone || !email || !message) { // ← ДОБАВИТЬ email
     return res.status(400).json({
       success: false,
       error: 'Все поля обязательны для заполнения'
@@ -49,12 +49,13 @@ app.post('/api/feedback', async (req, res) => {
         <h2>📩 Новое сообщение с сайта ПикмиПицца</h2>
         <p><strong>Имя:</strong> ${name}</p>
         <p><strong>Телефон:</strong> ${phone}</p>
+        <p><strong>Email:</strong> ${email}</p> <!-- ← ДОБАВИТЬ -->
         <p><strong>Сообщение:</strong></p>
         <p style="background:#f5f5f5;padding:15px;border-radius:8px;">${message}</p>
         <hr>
         <p style="color:#999;font-size:12px;">Время: ${new Date().toLocaleString('ru-RU')}</p>
       `,
-      text: `Новое сообщение от ${name}\nТелефон: ${phone}\nСообщение: ${message}`
+      text: `Новое сообщение с сайта ПикмиПицца\n\nИмя: ${name}\nТелефон: ${phone}\nEmail: ${email}\nСообщение: ${message}`
     };
 
     await transporter.sendMail(mailOptions);

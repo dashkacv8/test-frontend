@@ -2,6 +2,7 @@
   // ---------- ДАННЫЕ ----------
   const menuData = {
     pizza: [
+      { id: 0, name: 'Своя пицца', emoji: '🛠️', desc: 'Выберите размер и начинки на свой вкус', price: 350, isConstructor: true },
       { id: 1, name: 'Маргарита', emoji: '🍅', desc: 'томат, моцарелла, базилик', price: 590 },
       { id: 2, name: 'Пепперони', emoji: '🌶️', desc: 'пепперони, сыр, томатный соус', price: 720 },
       { id: 3, name: 'Гавайская', emoji: '🍍', desc: 'курица, ананас, моцарелла', price: 810 },
@@ -30,6 +31,12 @@
       { id: 20, name: 'Барбекю', emoji: '🥩', desc: 'копчёный соус барбекю', price: 90 },
       { id: 21, name: 'Томатный соус', emoji: '🍅', desc: 'классический томатный', price: 70 },
       { id: 22, name: 'Острый соус', emoji: '🌶️', desc: 'соус чили', price: 90 }
+    ],
+    combo: [
+      { id: 200, name: 'Комбо для одного', emoji: '🍕🥤', desc: 'Пицца 32см на выбор + напиток 0.5л', price: 690, category: 'combo' },
+      { id: 201, name: 'Комбо для двоих', emoji: '🍕🍕🍟', desc: '2 пиццы 32см на выбор + картофель фри', price: 1490, category: 'combo' },
+      { id: 202, name: 'Комбо для компании', emoji: '🍕🍕🍕🥤', desc: '3 пиццы 32см + 2 напитка 0.5л', price: 2290, category: 'combo' },
+      { id: 203, name: 'Комбо + закуска', emoji: '🍕🍗', desc: 'Пицца 32см + куриные крылышки', price: 890, category: 'combo' }
     ]
   };
 
@@ -41,6 +48,67 @@
     { id: 18, name: 'Сырный соус', emoji: '🧀', price: 80, category: 'sauces' },
     { id: 20, name: 'Барбекю', emoji: '🥩', price: 90, category: 'sauces' }
   ];
+
+  // ---------- ТОЧКИ САМОВЫВОЗА ----------
+  const pickupPoints = [
+    { id: 1, name: 'ул. Ленина, 45', address: 'г. Пермь, ул. Ленина, 45', hours: '10:00–23:00', lat: 58.0105, lng: 56.2502 },
+    { id: 2, name: 'Комсомольский пр-т, 68', address: 'г. Пермь, Комсомольский пр-т, 68', hours: '10:00–23:00', lat: 58.0004, lng: 56.2270 },
+    { id: 3, name: 'ул. Куйбышева, 95', address: 'г. Пермь, ул. Куйбышева, 95', hours: '10:00–22:00', lat: 58.0184, lng: 56.2661 }
+  ];
+  let selectedPickupPointId = pickupPoints[0].id;
+
+  const toppingPrices = { 'грибы': 30, 'оливки': 35, 'бекон': 60, 'перец': 40, 'сыр': 30 };
+  function getToppingsPrice(toppings) {
+    return toppings.reduce((sum, t) => sum + (toppingPrices[t] || 30), 0);
+  }
+
+  // ---------- ОТЗЫВЫ (СИДОВЫЕ ДАННЫЕ) ----------
+  const seedReviews = {
+    1: [
+      { author: 'Мария', rating: 5, text: 'Классика, которая никогда не подводит! Тесто тонкое, базилик свежий.', date: '02.09.2026' },
+      { author: 'Игорь', rating: 4, text: 'Вкусно, но хотелось бы побольше моцареллы.', date: '28.08.2026' }
+    ],
+    2: [
+      { author: 'Дмитрий', rating: 5, text: 'Лучшая пепперони в городе, острая именно так, как надо!', date: '05.09.2026' },
+      { author: 'Алина', rating: 5, text: 'Заказываю уже третий раз, всегда свежая и горячая.', date: '30.08.2026' },
+      { author: 'Сергей', rating: 4, text: 'Хорошая пицца, доставили быстро.', date: '22.08.2026' }
+    ],
+    3: [
+      { author: 'Ольга', rating: 3, text: 'Ананас на пицце — на любителя, но сделано качественно.', date: '01.09.2026' },
+      { author: 'Павел', rating: 5, text: 'Обожаю гавайскую, курица очень сочная.', date: '25.08.2026' }
+    ],
+    4: [
+      { author: 'Екатерина', rating: 5, text: 'Четыре сорта сыра реально чувствуются, невероятно вкусно.', date: '03.09.2026' }
+    ],
+    5: [
+      { author: 'Андрей', rating: 5, text: 'Мясная — то, что нужно после тренировки. Огромная порция белка и вкуса.', date: '04.09.2026' },
+      { author: 'Наталья', rating: 4, text: 'Сытно и вкусно, но немного жирновато.', date: '20.08.2026' }
+    ],
+    6: [
+      { author: 'Виктория', rating: 4, text: 'Отличный вариант для тех, кто не ест мясо. Овощи свежие.', date: '29.08.2026' }
+    ]
+  };
+
+  function getReviews(itemId) {
+    const seed = seedReviews[itemId] || [];
+    let userAdded = [];
+    try {
+      userAdded = JSON.parse(localStorage.getItem('pikmi-reviews-' + itemId)) || [];
+    } catch (e) { userAdded = []; }
+    return userAdded.concat(seed);
+  }
+
+  function computeRating(itemId) {
+    const reviews = getReviews(itemId);
+    if (reviews.length === 0) return { avg: 0, count: 0 };
+    const sum = reviews.reduce((s, r) => s + r.rating, 0);
+    return { avg: sum / reviews.length, count: reviews.length };
+  }
+
+  function starsString(avg) {
+    const rounded = Math.round(avg);
+    return '★★★★★'.slice(0, rounded) + '☆☆☆☆☆'.slice(0, 5 - rounded);
+  }
 
   // ---------- СОСТОЯНИЕ ----------
   let cart = [];
@@ -86,6 +154,8 @@
   const cartPage = document.getElementById('cartPage');
   const profilePage = document.getElementById('profilePage');
   const promoPage = document.getElementById('promoPage');
+  const faqPage = document.getElementById('faqPage');
+  const mapPage = document.getElementById('mapPage');
   const profileBtn = document.getElementById('profileBtn');
   const profileBtnText = document.getElementById('profileBtnText');
   const closeProfileBtn = document.getElementById('closeProfileBtn');
@@ -158,11 +228,13 @@
   // Поля для обратной связи
   const feedbackName = document.getElementById('feedbackName');
   const feedbackPhone = document.getElementById('feedbackPhone');
+  const feedbackEmail = document.getElementById('feedbackEmail');
   const feedbackMessage = document.getElementById('feedbackMessage');
 
   // Элементы ошибок
   const nameError = document.getElementById('nameError');
   const phoneError = document.getElementById('phoneError');
+  const emailError = document.getElementById('emailError');
   const messageError = document.getElementById('messageError');
   const recaptchaError = document.getElementById('recaptchaError');
 
@@ -299,11 +371,18 @@
 
       const count = getItemCount(item);
       const isInCart = count > 0;
+      const rating = computeRating(item.id);
+      const ratingHtml = item.isConstructor ? '' : (rating.count > 0
+        ? `<div class="item-rating" data-review-id="${item.id}"><span class="stars">${starsString(rating.avg)}</span> ${rating.avg.toFixed(1)} (${rating.count})</div>`
+        : `<div class="item-rating" data-review-id="${item.id}">Оставить отзыв</div>`);
+
+      if (item.isConstructor) card.classList.add('constructor-card');
 
       card.innerHTML = `
           <div class="pizza-emoji">${item.emoji}</div>
           <div class="pizza-name">${item.name}</div>
           <div class="pizza-desc">${item.desc}</div>
+          ${ratingHtml}
           <div class="pizza-price">${item.price} ₽</div>
           ${isInCart ? `
             <div class="cart-controls">
@@ -315,6 +394,14 @@
             <button class="add-to-cart-btn" data-id="${item.id}" data-category="${category}">➕ В корзину</button>
           `}
         `;
+
+      const ratingEl = card.querySelector('.item-rating');
+      if (ratingEl) {
+        ratingEl.addEventListener('click', (e) => {
+          e.stopPropagation();
+          openReviewsModal(item);
+        });
+      }
 
       const addBtn = card.querySelector('.add-to-cart-btn');
       if (addBtn) {
@@ -429,6 +516,16 @@
   }
 
   // ---------- МОДАЛКА ПИЦЦЫ ----------
+  function updateModalLivePrice() {
+    if (!currentPizza) return;
+    const multiplier = getSelectedMultiplier();
+    const toppings = getSelectedToppings();
+    const basePrice = Math.round(currentPizza.price * multiplier);
+    const total = basePrice + getToppingsPrice(toppings);
+    const priceEl = document.getElementById('modalLivePrice');
+    if (priceEl) priceEl.textContent = `${total} ₽`;
+  }
+
   function openModal(pizzaId) {
     const pizza = menuData.pizza.find(p => p.id === pizzaId);
     if (!pizza) return;
@@ -446,6 +543,7 @@
     });
     document.querySelectorAll('#toppingsGroup input').forEach(cb => cb.checked = false);
 
+    updateModalLivePrice();
     modalOverlay.classList.add('open');
   }
 
@@ -477,7 +575,7 @@
     const toppings = getSelectedToppings();
 
     let basePrice = Math.round(currentPizza.price * multiplier);
-    const toppingsPrice = toppings.length * 30;
+    const toppingsPrice = getToppingsPrice(toppings);
     const totalPrice = basePrice + toppingsPrice;
 
     const existing = cart.find(item =>
@@ -667,6 +765,24 @@
       renderCart();
       updateOrderButton();
       updateSummary();
+      return;
+    }
+
+    if (promoCode === 'КОМБО15' || promoCode === 'COMBO15') {
+      const hasPizza = cart.some(ci => ci.category === 'pizza');
+      const hasSnack = cart.some(ci => ci.category === 'snacks');
+      const hasDrink = cart.some(ci => ci.category === 'drinks');
+      if (!hasPizza || !hasSnack || !hasDrink) {
+        promoApplied = false;
+        promoDiscount = 0;
+        promoMessage.textContent = '⚠️ Для комбо нужны пицца + закуска + напиток — промокод отменён';
+        promoMessage.className = 'promo-message info';
+        promoInput.value = '';
+        renderCatalog(currentCategory);
+        renderCart();
+        updateOrderButton();
+        updateSummary();
+      }
     }
   }
 
@@ -883,6 +999,113 @@
     if (e.target === orderStatusModal) closeOrderStatusModal();
   });
 
+  // ---------- МОДАЛКА ОТЗЫВОВ ----------
+  const reviewsModal = document.getElementById('reviewsModal');
+  const reviewsModalTitle = document.getElementById('reviewsModalTitle');
+  const reviewsAvg = document.getElementById('reviewsAvg');
+  const reviewsAvgStars = document.getElementById('reviewsAvgStars');
+  const reviewsCountEl = document.getElementById('reviewsCount');
+  const reviewsList = document.getElementById('reviewsList');
+  const reviewAuthorInput = document.getElementById('reviewAuthorInput');
+  const reviewTextInput = document.getElementById('reviewTextInput');
+  const reviewStarPicker = document.getElementById('reviewStarPicker');
+  const reviewSubmitBtn = document.getElementById('reviewSubmitBtn');
+
+  let currentReviewItem = null;
+  let selectedStarValue = 5;
+
+  function renderReviewsModal() {
+    if (!currentReviewItem) return;
+    const reviews = getReviews(currentReviewItem.id);
+    const rating = computeRating(currentReviewItem.id);
+
+    reviewsModalTitle.textContent = `Отзывы: ${currentReviewItem.name}`;
+    reviewsAvg.textContent = rating.count > 0 ? rating.avg.toFixed(1) : '—';
+    reviewsAvgStars.textContent = rating.count > 0 ? starsString(rating.avg) : '☆☆☆☆☆';
+    reviewsCountEl.textContent = rating.count === 0
+      ? 'Пока нет отзывов — будьте первым!'
+      : `${rating.count} ${pluralizeReviews(rating.count)}`;
+
+    reviewsList.innerHTML = reviews.map(r => `
+      <div class="review-item">
+        <div class="review-header">
+          <span class="review-author">${escapeHtml(r.author)}</span>
+          <span class="review-date">${r.date}</span>
+        </div>
+        <div class="review-stars">${starsString(r.rating)}</div>
+        <div class="review-text">${escapeHtml(r.text)}</div>
+      </div>
+    `).join('');
+  }
+
+  function pluralizeReviews(n) {
+    const mod10 = n % 10, mod100 = n % 100;
+    if (mod10 === 1 && mod100 !== 11) return 'отзыв';
+    if ([2, 3, 4].includes(mod10) && ![12, 13, 14].includes(mod100)) return 'отзыва';
+    return 'отзывов';
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function openReviewsModal(item) {
+    currentReviewItem = item;
+    selectedStarValue = 5;
+    reviewAuthorInput.value = isLoggedIn ? userData.name : '';
+    reviewTextInput.value = '';
+    updateStarPicker();
+    renderReviewsModal();
+    reviewsModal.classList.add('open');
+  }
+
+  function closeReviewsModal() {
+    reviewsModal.classList.remove('open');
+    currentReviewItem = null;
+  }
+
+  reviewsModal.addEventListener('click', (e) => {
+    if (e.target === reviewsModal) closeReviewsModal();
+  });
+
+  function updateStarPicker() {
+    reviewStarPicker.querySelectorAll('span').forEach(s => {
+      s.classList.toggle('active', Number(s.dataset.val) <= selectedStarValue);
+    });
+  }
+
+  reviewStarPicker.querySelectorAll('span').forEach(s => {
+    s.addEventListener('click', () => {
+      selectedStarValue = Number(s.dataset.val);
+      updateStarPicker();
+    });
+  });
+
+  reviewSubmitBtn.addEventListener('click', () => {
+    const author = reviewAuthorInput.value.trim();
+    const text = reviewTextInput.value.trim();
+    if (!author || !text) {
+      showNotification('error', 'Не всё заполнено', 'Пожалуйста, укажите имя и текст отзыва.');
+      return;
+    }
+    const newReview = {
+      author, rating: selectedStarValue, text,
+      date: new Date().toLocaleDateString('ru-RU')
+    };
+    const key = 'pikmi-reviews-' + currentReviewItem.id;
+    let stored = [];
+    try { stored = JSON.parse(localStorage.getItem(key)) || []; } catch (e) { stored = []; }
+    stored.unshift(newReview);
+    localStorage.setItem(key, JSON.stringify(stored));
+
+    reviewTextInput.value = '';
+    renderReviewsModal();
+    renderCatalog(currentCategory);
+    showNotification('success', 'Спасибо!', 'Ваш отзыв опубликован 🎉');
+  });
+
   // ---------- ОФОРМЛЕНИЕ ЗАКАЗА ----------
   function completeOrder() {
     const { total, discount, freeItem, bonusDiscount, deliveryFee } = getCartTotalWithFactors();
@@ -1044,6 +1267,39 @@
       updateOrderButton();
       updateSummary();
       showNotification('success', '🏪 Скидка за самовывоз', 'Скидка 10% применена!');
+    } else if (code === 'КОМБО15' || code === 'COMBO15') {
+      const hasPizza = cart.some(ci => ci.category === 'pizza');
+      const hasSnack = cart.some(ci => ci.category === 'snacks');
+      const hasDrink = cart.some(ci => ci.category === 'drinks');
+      if (hasPizza && hasSnack && hasDrink) {
+        promoApplied = true;
+        promoDiscount = 15;
+        freePizza = false;
+        promoCode = code;
+        promoMessage.textContent = '🍕🍟🥤 Комбо дня: скидка 15% применена!';
+        promoMessage.className = 'promo-message success';
+        renderCatalog(currentCategory);
+        renderCart();
+        updateOrderButton();
+        updateSummary();
+        showNotification('success', '🎉 Комбо дня', 'Скидка 15% применена ко всему заказу!');
+      } else {
+        promoMessage.textContent = '❌ Для комбо нужны пицца + закуска + напиток в заказе';
+        promoMessage.className = 'promo-message error';
+        showNotification('error', '❌ Ошибка', 'Добавьте в корзину пиццу, закуску и напиток, чтобы применить комбо');
+      }
+    } else if (code === 'ДРУГ100' || code === 'FRIEND100') {
+      promoApplied = true;
+      promoDiscount = 10;
+      freePizza = false;
+      promoCode = code;
+      promoMessage.textContent = '👥 Скидка 10% по приглашению друга применена!';
+      promoMessage.className = 'promo-message success';
+      renderCatalog(currentCategory);
+      renderCart();
+      updateOrderButton();
+      updateSummary();
+      showNotification('success', '👥 Приведи друга', 'Скидка 10% применена! Пригласивший получит 100 бонусов после вашего заказа.');
     } else if (code) {
       promoMessage.textContent = '❌ Неверный промокод';
       promoMessage.className = 'promo-message error';
@@ -1052,27 +1308,25 @@
   }
 
   // ---------- НАВИГАЦИЯ ----------
+  function hideAllPages() {
+    [catalogPage, cartPage, profilePage, promoPage, faqPage, mapPage].forEach(p => {
+      p.classList.remove('active');
+      p.style.display = 'none';
+    });
+  }
+
   function showCatalog() {
+    hideAllPages();
     catalogPage.style.display = 'block';
-    cartPage.classList.remove('active');
-    cartPage.style.display = 'none';
-    profilePage.classList.remove('active');
-    profilePage.style.display = 'none';
-    promoPage.classList.remove('active');
-    promoPage.style.display = 'none';
     document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
     document.querySelector('.nav-item[data-page="catalog"]')?.classList.add('active');
     renderCatalog(currentCategory);
   }
 
   function showCart() {
-    catalogPage.style.display = 'none';
+    hideAllPages();
     cartPage.style.display = 'block';
     cartPage.classList.add('active');
-    profilePage.classList.remove('active');
-    profilePage.style.display = 'none';
-    promoPage.classList.remove('active');
-    promoPage.style.display = 'none';
     renderCart();
     updateOrderButton();
     updateSummary();
@@ -1082,27 +1336,36 @@
   }
 
   function showProfile() {
-    catalogPage.style.display = 'none';
-    cartPage.classList.remove('active');
-    cartPage.style.display = 'none';
+    hideAllPages();
     profilePage.style.display = 'block';
     profilePage.classList.add('active');
-    promoPage.classList.remove('active');
-    promoPage.style.display = 'none';
     document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
     updateProfileUI();
   }
 
   function showPromo() {
-    catalogPage.style.display = 'none';
-    cartPage.classList.remove('active');
-    cartPage.style.display = 'none';
-    profilePage.classList.remove('active');
-    profilePage.style.display = 'none';
+    hideAllPages();
     promoPage.style.display = 'block';
     promoPage.classList.add('active');
     document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
     document.querySelector('.nav-item[data-page="promo"]')?.classList.add('active');
+  }
+
+  function showFAQ() {
+    hideAllPages();
+    faqPage.style.display = 'block';
+    faqPage.classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+    document.querySelector('.nav-item[data-page="faq"]')?.classList.add('active');
+  }
+
+  function showMap() {
+    hideAllPages();
+    mapPage.style.display = 'block';
+    mapPage.classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+    document.querySelector('.nav-item[data-page="map"]')?.classList.add('active');
+    initPickupMap();
   }
 
   // ---------- ПРОФИЛЬ ----------
@@ -1275,9 +1538,11 @@
     feedbackModal.classList.add('open');
     feedbackName.value = '';
     feedbackPhone.value = '';
+    feedbackEmail.value = '';
     feedbackMessage.value = '';
     clearFieldError(feedbackName, nameError);
     clearFieldError(feedbackPhone, phoneError);
+    clearFieldError(feedbackEmail, emailError);
     clearFieldError(feedbackMessage, messageError);
 
     // Сброс reCAPTCHA
@@ -1496,6 +1761,8 @@
       const page = this.dataset.page;
       if (page === 'catalog') showCatalog();
       else if (page === 'promo') showPromo();
+      else if (page === 'faq') showFAQ();
+      else if (page === 'map') showMap();
       else if (page === 'contacts') openInfoModal('contacts');
       else showCatalog();
     });
@@ -1542,6 +1809,15 @@
       clearFieldError(feedbackPhone, phoneError);
     }
 
+    // Проверка email
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!feedbackEmail.value.trim() || !emailPattern.test(feedbackEmail.value.trim())) {
+      showFieldError(feedbackEmail, emailError);
+      hasError = true;
+    } else {
+      clearFieldError(feedbackEmail, emailError);
+    }
+
     // Проверка сообщения
     if (!feedbackMessage.value.trim()) {
       showFieldError(feedbackMessage, messageError);
@@ -1567,6 +1843,7 @@
 
     const name = feedbackName.value.trim();
     const phone = feedbackPhone.value.trim();
+    const email = feedbackEmail.value.trim();
     const message = feedbackMessage.value.trim();
 
     try {
@@ -1575,7 +1852,7 @@
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ name, phone, message })
+        body: JSON.stringify({ name, phone, email, message })
       });
 
       const data = await response.json();
@@ -1616,6 +1893,88 @@
   profileBtn.addEventListener('click', showProfile);
   closeProfileBtn.addEventListener('click', showCatalog);
   closePromoBtn.addEventListener('click', showCatalog);
+  document.getElementById('closeFaqBtn')?.addEventListener('click', showCatalog);
+  document.getElementById('closeMapBtn')?.addEventListener('click', showCatalog);
+
+  // ---------- КАРТА ТОЧЕК САМОВЫВОЗА ----------
+  let pickupMapInstance = null;
+
+  function initPickupMap() {
+    const mapPointsList = document.getElementById('mapPointsList');
+    if (mapPointsList) {
+      mapPointsList.innerHTML = pickupPoints.map(p => `
+        <div class="map-point-card">
+          <div class="pickup-point-name">📍 ${p.name}</div>
+          <div class="pickup-point-hours">🕐 ${p.hours}</div>
+          <button class="map-point-select-btn" data-point-id="${p.id}">Выбрать эту точку</button>
+        </div>
+      `).join('');
+
+      mapPointsList.querySelectorAll('.map-point-select-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          selectedPickupPointId = Number(btn.dataset.pointId);
+          updatePickupAddressValue();
+          renderPickupPoints();
+          document.querySelectorAll('.delivery-toggle button').forEach(b => b.classList.remove('active'));
+          document.querySelector('.delivery-toggle button[data-type="pickup"]')?.classList.add('active');
+          deliveryType = 'pickup';
+          deliveryAddressBlock.style.display = 'none';
+          pickupAddressBlock.style.display = 'block';
+          deliveryAddress.disabled = true;
+          showCart();
+          showNotification('success', '📍 Точка выбрана', `Самовывоз: ${pickupPoints.find(p => p.id === selectedPickupPointId).address}`);
+        });
+      });
+    }
+
+    if (typeof L === 'undefined') return;
+
+    if (!pickupMapInstance) {
+      pickupMapInstance = L.map('pickupMap').setView([pickupPoints[0].lat, pickupPoints[0].lng], 12);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 19
+      }).addTo(pickupMapInstance);
+
+      pickupPoints.forEach(p => {
+        L.marker([p.lat, p.lng]).addTo(pickupMapInstance)
+          .bindPopup(`<b>${p.name}</b><br>${p.address}<br>🕐 ${p.hours}`);
+      });
+    }
+
+    setTimeout(() => pickupMapInstance.invalidateSize(), 100);
+  }
+
+  // ---------- FAQ АККОРДЕОН ----------
+  document.querySelectorAll('.faq-question').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const item = btn.closest('.faq-item');
+      const wasOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item.open').forEach(i => {
+        i.classList.remove('open');
+        i.querySelector('.faq-answer').style.maxHeight = null;
+      });
+      if (!wasOpen) {
+        item.classList.add('open');
+        const answer = item.querySelector('.faq-answer');
+        answer.style.maxHeight = answer.scrollHeight + 20 + 'px';
+      }
+    });
+  });
+
+  // ---------- ТЁМНАЯ ТЕМА ----------
+  const themeToggleBtn = document.getElementById('themeToggleBtn');
+  function applyTheme(theme) {
+    document.body.classList.toggle('dark-theme', theme === 'dark');
+    themeToggleBtn.textContent = theme === 'dark' ? '☀️' : '🌙';
+  }
+  const savedTheme = localStorage.getItem('pikmi-theme') || 'light';
+  applyTheme(savedTheme);
+  themeToggleBtn.addEventListener('click', () => {
+    const next = document.body.classList.contains('dark-theme') ? 'light' : 'dark';
+    localStorage.setItem('pikmi-theme', next);
+    applyTheme(next);
+  });
 
   deliveryToggle.addEventListener('click', (e) => {
     const btn = e.target.closest('button');
@@ -1637,6 +1996,40 @@
     updatePaymentUI();
     updateSummary();
   });
+
+  // ---------- ТОЧКИ САМОВЫВОЗА: СПИСОК И ВЫБОР ----------
+  const pickupPointsList = document.getElementById('pickupPointsList');
+
+  function renderPickupPoints() {
+    if (!pickupPointsList) return;
+    pickupPointsList.innerHTML = pickupPoints.map(p => `
+      <label class="pickup-point-item${p.id === selectedPickupPointId ? ' selected' : ''}" data-point-id="${p.id}">
+        <input type="radio" name="pickupPoint" value="${p.id}" ${p.id === selectedPickupPointId ? 'checked' : ''}>
+        <div class="pickup-point-info">
+          <div class="pickup-point-name">📍 ${p.name}</div>
+          <div class="pickup-point-hours">🕐 ${p.hours}</div>
+        </div>
+      </label>
+    `).join('');
+
+    pickupPointsList.querySelectorAll('input[name="pickupPoint"]').forEach(input => {
+      input.addEventListener('change', () => {
+        selectedPickupPointId = Number(input.value);
+        updatePickupAddressValue();
+        renderPickupPoints();
+        updateOrderButton();
+        updateSummary();
+      });
+    });
+  }
+
+  function updatePickupAddressValue() {
+    const point = pickupPoints.find(p => p.id === selectedPickupPointId) || pickupPoints[0];
+    if (pickupAddress) pickupAddress.value = point.address;
+  }
+
+  updatePickupAddressValue();
+  renderPickupPoints();
 
   deliveryAddress.addEventListener('input', updateOrderButton);
 
@@ -1716,7 +2109,10 @@
     if (!btn) return;
     document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
+    updateModalLivePrice();
   });
+
+  document.getElementById('toppingsGroup')?.addEventListener('change', updateModalLivePrice);
 
   modalCancelBtn.addEventListener('click', closeModal);
   modalAddBtn.addEventListener('click', addToCartFromModal);
@@ -1768,20 +2164,42 @@
 
   // ---------- ТАЙМЕР "СЧАСТЛИВЫЕ ЧАСЫ" (14:00–16:00) ----------
   const happyHourEl = document.getElementById('happyHourCountdown');
-  if (happyHourEl) {
-    function updateHappyHourCountdown() {
-      const now = new Date();
+  const happyHourBanner = document.getElementById('happyHourBanner');
+  const happyHourStatus = document.getElementById('happyHourStatus');
+  const happyHourCountdownLabel = document.getElementById('happyHourCountdownLabel');
+
+  function formatDiff(diffMs) {
+    const h = String(Math.floor(diffMs / 3600000)).padStart(2, '0');
+    const m = String(Math.floor((diffMs % 3600000) / 60000)).padStart(2, '0');
+    const s = String(Math.floor((diffMs % 60000) / 1000)).padStart(2, '0');
+    return `${h}:${m}:${s}`;
+  }
+
+  function updateHappyHourCountdown() {
+    if (!happyHourEl) return;
+    const now = new Date();
+    const hour = now.getHours();
+    const isActive = hour >= 14 && hour < 16;
+
+    if (isActive) {
       const end = new Date(now);
       end.setHours(16, 0, 0, 0);
-      if (now >= end) {
-        end.setDate(end.getDate() + 1);
-      }
-      const diff = end - now;
-      const h = String(Math.floor(diff / 3600000)).padStart(2, '0');
-      const m = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
-      const s = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
-      happyHourEl.textContent = `${h}:${m}:${s}`;
+      happyHourEl.textContent = formatDiff(end - now);
+      happyHourCountdownLabel.textContent = 'До конца акции осталось';
+      happyHourStatus.textContent = '🟢 Акция активна сейчас';
+      happyHourBanner.classList.remove('inactive');
+    } else {
+      const start = new Date(now);
+      start.setHours(14, 0, 0, 0);
+      if (now >= start) start.setDate(start.getDate() + 1);
+      happyHourEl.textContent = formatDiff(start - now);
+      happyHourCountdownLabel.textContent = 'Акция начнётся через';
+      happyHourStatus.textContent = '⚪ Сейчас акция не действует';
+      happyHourBanner.classList.add('inactive');
     }
+  }
+
+  if (happyHourEl) {
     updateHappyHourCountdown();
     setInterval(updateHappyHourCountdown, 1000);
   }
