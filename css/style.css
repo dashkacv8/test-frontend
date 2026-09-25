@@ -312,6 +312,13 @@ body {
   font-size: 0.8rem;
 }
 
+.footer-requisites {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 0.75rem;
+  color: var(--text-muted4);
+}
+
 /* ===== СИСТЕМА УВЕДОМЛЕНИЙ ===== */
 .notification-overlay {
   position: fixed;
@@ -530,6 +537,16 @@ body {
 /* ===== МОДАЛКА ИНФО ===== */
 .modal-overlay.info-modal .modal-box {
   max-width: 450px;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.legal-text p {
+  margin-bottom: 12px;
+}
+
+.legal-text strong {
+  color: var(--text-main);
 }
 
 .info-modal-content {
@@ -559,6 +576,99 @@ body {
 .info-modal-content .info-item .value {
   color: var(--text-main);
   font-weight: 600;
+}
+
+/* ===== СОГЛАСИЕ НА ОБРАБОТКУ ДАННЫХ ===== */
+.consent-group {
+  margin-top: 4px;
+}
+
+.consent-checkbox {
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.consent-checkbox .heart-icon {
+  margin-top: 1px;
+}
+
+.consent-checkbox .heart-label {
+  font-size: 0.85rem;
+  line-height: 1.5;
+  white-space: normal;
+}
+
+.consent-checkbox .legal-link {
+  color: #ff8fc0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.consent-checkbox .legal-link:hover {
+  color: #ffb3d1;
+}
+
+.order-consent-group {
+  margin-bottom: 4px;
+}
+
+/* ===== COOKIE-БАННЕР ===== */
+.cookie-banner {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: -200px;
+  z-index: 500;
+  max-width: 720px;
+  margin: 0 auto;
+  background: var(--card-bg-solid);
+  border: 1px solid rgba(255, 150, 200, 0.2);
+  border-radius: 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  padding: 18px 22px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  transition: bottom 0.4s ease;
+}
+
+.cookie-banner.show {
+  bottom: 16px;
+}
+
+.cookie-banner-text {
+  flex: 1;
+  min-width: 220px;
+  color: var(--text-muted2);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.cookie-banner-text .legal-link {
+  color: #ff8fc0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.cookie-banner-btn {
+  background: linear-gradient(135deg, #ff6b9d, #c084e8);
+  border: none;
+  padding: 10px 22px;
+  border-radius: 60px;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.cookie-banner-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(255, 100, 200, 0.3);
 }
 
 /* ===== СТИЛИ ДЛЯ ЧЕКБОКСОВ-СЕРДЕЧЕК ===== */

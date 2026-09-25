@@ -230,6 +230,7 @@
   const feedbackPhone = document.getElementById('feedbackPhone');
   const feedbackEmail = document.getElementById('feedbackEmail');
   const feedbackMessage = document.getElementById('feedbackMessage');
+  const feedbackConsent = document.getElementById('feedbackConsent');
 
   // Элементы ошибок
   const nameError = document.getElementById('nameError');
@@ -237,6 +238,12 @@
   const emailError = document.getElementById('emailError');
   const messageError = document.getElementById('messageError');
   const recaptchaError = document.getElementById('recaptchaError');
+  const consentError = document.getElementById('consentError');
+
+  // Согласие при оформлении заказа + cookie-баннер
+  const orderConsent = document.getElementById('orderConsent');
+  const cookieBanner = document.getElementById('cookieBanner');
+  const cookieAcceptBtn = document.getElementById('cookieAcceptBtn');
 
   // Уведомления
   const notifOverlay = document.getElementById('notificationOverlay');
@@ -793,8 +800,9 @@
     const hasAddress = deliveryType === 'delivery' ? deliveryAddress.value.trim().length > 0 : true;
     const isDelivery = deliveryType === 'delivery';
     const minOrder = isDelivery ? total >= 1000 : true;
+    const hasConsent = orderConsent ? orderConsent.checked : true;
 
-    const isValid = hasItems && hasAddress && minOrder;
+    const isValid = hasItems && hasAddress && minOrder && hasConsent;
 
     orderBtn.classList.toggle('active', isValid);
     orderBtn.disabled = !isValid;
@@ -805,6 +813,8 @@
       orderBtn.textContent = `🚚 Для доставки нужно заказать от 1000 ₽ (сейчас ${total} ₽)`;
     } else if (!hasAddress) {
       orderBtn.textContent = '📍 Укажите адрес';
+    } else if (!hasConsent) {
+      orderBtn.textContent = '📜 Примите условия оферты';
     } else {
       orderBtn.textContent = '✅ Заказать';
     }
@@ -1187,6 +1197,7 @@
     useBonuses = false;
     useBonusesCheckbox.checked = false;
     bonusAmount = 0;
+    if (orderConsent) orderConsent.checked = false;
     renderCatalog(currentCategory);
     renderCart();
     updateBadge();
@@ -1431,6 +1442,12 @@
   function register() {
     const name = document.getElementById('regName').value;
     const phone = document.getElementById('regPhone').value;
+    const regConsent = document.getElementById('regConsent');
+
+    if (regConsent && !regConsent.checked) {
+      showNotification('error', '❌ Ошибка', 'Нужно согласие на обработку персональных данных');
+      return;
+    }
 
     if (name && phone) {
       isLoggedIn = true;
@@ -1461,7 +1478,9 @@
       vacancies: '💼 Вакансии',
       about: '📖 О нас',
       'delivery-info': '🚚 Доставка',
-      'payment-info': '💳 Оплата'
+      'payment-info': '💳 Оплата',
+      oferta: '📜 Публичная оферта',
+      privacy: '🔒 Политика конфиденциальности'
     };
 
     const contents = {
@@ -1525,6 +1544,37 @@
             <div class="info-item"><span class="label">При получении</span><span class="value">Картой или наличными</span></div>
             <div class="info-item"><span class="label">Бонусы</span><span class="value">5% от суммы заказа</span></div>
           </div>
+        `,
+      oferta: `
+          <span class="info-icon">📜</span>
+          <div class="legal-text">
+            <p><strong>Публичная оферта на оказание услуг по продаже и доставке пиццы</strong></p>
+            <p>1. Настоящий документ является официальным предложением (публичной офертой) ИП Соколовой Д.В. (далее — «Исполнитель») и содержит все существенные условия по продаже и доставке продукции через сайт ПикмиПицца.</p>
+            <p>2. Оформляя заказ на сайте, пользователь (далее — «Заказчик») подтверждает, что принимает условия настоящей оферты в полном объёме.</p>
+            <p>3. <strong>Предмет оферты.</strong> Исполнитель обязуется передать Заказчику пиццу и сопутствующие товары в ассортименте и по ценам, указанным в каталоге на сайте, а Заказчик обязуется оплатить и принять заказ.</p>
+            <p>4. <strong>Оформление заказа.</strong> Заказ считается оформленным с момента нажатия кнопки «Заказать» и получения Заказчиком уведомления о принятии заказа.</p>
+            <p>5. <strong>Оплата.</strong> Оплата производится онлайн картой, картой курьеру или наличными при получении — способ выбирается Заказчиком при оформлении заказа.</p>
+            <p>6. <strong>Доставка.</strong> Сроки и стоимость доставки указаны в разделе «Доставка». Минимальная сумма заказа для доставки — 500 ₽.</p>
+            <p>7. <strong>Отмена и возврат.</strong> Заказчик вправе отменить заказ в течение 5 минут после оформления. Возврат денежных средств осуществляется на карту, с которой производилась оплата, в течение 10 рабочих дней.</p>
+            <p>8. <strong>Ответственность сторон.</strong> Исполнитель не несёт ответственности за задержку доставки по причинам, не зависящим от Исполнителя (погодные условия, действия третьих лиц и т.п.).</p>
+            <p>9. <strong>Срок действия оферты.</strong> Оферта действует бессрочно, до момента её отзыва Исполнителем.</p>
+            <p style="color:#806a80;font-size:0.85rem;margin-top:16px;">Это демонстрационный (учебный) текст оферты для тестового проекта. Перед использованием на реальном сайте документ должен быть подготовлен или проверен юристом.</p>
+          </div>
+        `,
+      privacy: `
+          <span class="info-icon">🔒</span>
+          <div class="legal-text">
+            <p><strong>Политика обработки персональных данных</strong></p>
+            <p>1. Настоящая Политика определяет порядок обработки персональных данных пользователей сайта ПикмиПицца в соответствии с Федеральным законом от 27.07.2006 № 152-ФЗ «О персональных данных».</p>
+            <p>2. <strong>Оператор.</strong> Обработку данных осуществляет ИП Соколова Д.В., ИНН 590123456789, г. Пермь, ул. Студенческая, д. 22.</p>
+            <p>3. <strong>Какие данные собираются:</strong> имя, номер телефона, адрес электронной почты, адрес доставки, история заказов, а также технические данные (файлы cookie, данные localStorage — тема оформления, содержимое корзины).</p>
+            <p>4. <strong>Цели обработки:</strong> оформление и доставка заказов, обратная связь с пользователем, работа бонусной программы, улучшение качества сервиса.</p>
+            <p>5. <strong>Передача третьим лицам.</strong> Данные могут передаваться курьерской службе исключительно в объёме, необходимом для доставки заказа. Данные не передаются third-party рекламным сетям.</p>
+            <p>6. <strong>Срок хранения.</strong> Данные хранятся до момента отзыва согласия пользователем либо удаления учётной записи.</p>
+            <p>7. <strong>Права пользователя.</strong> Пользователь вправе в любой момент отозвать согласие на обработку персональных данных, запросить удаление своих данных, написав на почту info@picmipizza.ru.</p>
+            <p>8. <strong>Cookie и localStorage.</strong> Сайт использует файлы cookie и локальное хранилище браузера для сохранения темы оформления, корзины и данных сессии. Отключение cookie может ограничить работу отдельных функций сайта.</p>
+            <p style="color:#806a80;font-size:0.85rem;margin-top:16px;">Это демонстрационный (учебный) текст политики для тестового проекта. Перед использованием на реальном сайте документ должен быть подготовлен или проверен юристом.</p>
+          </div>
         `
     };
 
@@ -1540,6 +1590,8 @@
     feedbackPhone.value = '';
     feedbackEmail.value = '';
     feedbackMessage.value = '';
+    feedbackConsent.checked = false;
+    consentError.classList.remove('show');
     clearFieldError(feedbackName, nameError);
     clearFieldError(feedbackPhone, phoneError);
     clearFieldError(feedbackEmail, emailError);
@@ -1775,6 +1827,26 @@
     });
   });
 
+  // Ссылки "оферта / политика конфиденциальности" внутри форм и cookie-баннера
+  document.addEventListener('click', function (e) {
+    const link = e.target.closest('.legal-link');
+    if (link) {
+      e.preventDefault();
+      openInfoModal(link.dataset.info);
+    }
+  });
+
+  // ---------- COOKIE-БАННЕР ----------
+  if (cookieBanner && cookieAcceptBtn) {
+    if (!localStorage.getItem('pikmi-cookie-consent')) {
+      cookieBanner.classList.add('show');
+    }
+    cookieAcceptBtn.addEventListener('click', function () {
+      localStorage.setItem('pikmi-cookie-consent', '1');
+      cookieBanner.classList.remove('show');
+    });
+  }
+
   document.getElementById('openFeedbackBtn').addEventListener('click', openFeedbackModal);
 
   infoModalCloseBtn.addEventListener('click', () => infoModal.classList.remove('open'));
@@ -1835,6 +1907,14 @@
       } else {
         recaptchaError.classList.remove('show');
       }
+    }
+
+    // Проверка согласия на обработку персональных данных
+    if (!feedbackConsent.checked) {
+      consentError.classList.add('show');
+      hasError = true;
+    } else {
+      consentError.classList.remove('show');
     }
 
     if (hasError) {
@@ -1929,18 +2009,7 @@
 
     if (typeof L === 'undefined') return;
 
-    if (!pickupMapInstance) {
-      pickupMapInstance = L.map('pickupMap').setView([pickupPoints[0].lat, pickupPoints[0].lng], 12);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors',
-        maxZoom: 19
-      }).addTo(pickupMapInstance);
-
-      pickupPoints.forEach(p => {
-        L.marker([p.lat, p.lng]).addTo(pickupMapInstance)
-          .bindPopup(`<b>${p.name}</b><br>${p.address}<br>🕐 ${p.hours}`);
-      });
-    }
+   
 
     setTimeout(() => pickupMapInstance.invalidateSize(), 100);
   }
@@ -2032,6 +2101,7 @@
   renderPickupPoints();
 
   deliveryAddress.addEventListener('input', updateOrderButton);
+  if (orderConsent) orderConsent.addEventListener('change', updateOrderButton);
 
   paymentOptions.addEventListener('click', (e) => {
     const btn = e.target.closest('button');

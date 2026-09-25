@@ -252,6 +252,15 @@
         <div id="orderSummary"></div>
       </div>
 
+      <div class="form-group consent-group order-consent-group">
+        <label class="heart-checkbox consent-checkbox">
+          <input type="checkbox" id="orderConsent">
+          <span class="heart-icon empty">🤍</span>
+          <span class="heart-icon filled">❤️</span>
+          <span class="heart-label">Согласен(-на) с <a href="#" class="legal-link" data-info="oferta">публичной офертой</a> и <a href="#" class="legal-link" data-info="privacy">политикой конфиденциальности</a></span>
+        </label>
+      </div>
+
       <button class="order-btn" id="orderBtn">Заказать</button>
 
       <button class="back-to-catalog" id="backToCatalogBtn">← Вернуться в меню</button>
@@ -275,6 +284,12 @@
         <div id="registerForm" style="display:none;">
           <input type="text" id="regName" placeholder="Имя" value="Анна">
           <input type="text" id="regPhone" placeholder="Номер телефона" value="+7 999 123-45-67">
+          <label class="heart-checkbox consent-checkbox" style="margin:12px 0;">
+            <input type="checkbox" id="regConsent" checked>
+            <span class="heart-icon empty">🤍</span>
+            <span class="heart-icon filled">❤️</span>
+            <span class="heart-label">Согласен(-на) с <a href="#" class="legal-link" data-info="privacy">обработкой персональных данных</a></span>
+          </label>
           <button class="login-btn" id="registerBtn">Зарегистрироваться</button>
         </div>
       </div>
@@ -333,14 +348,29 @@
         <button class="footer-link-btn" data-info="delivery-info">🚚 Доставка</button>
         <span class="footer-divider">|</span>
         <button class="footer-link-btn" data-info="payment-info">💳 Оплата</button>
+        <span class="footer-divider">|</span>
+        <button class="footer-link-btn" data-info="oferta">📜 Публичная оферта</button>
+        <span class="footer-divider">|</span>
+        <button class="footer-link-btn" data-info="privacy">🔒 Конфиденциальность</button>
       </div>
 
       <button class="footer-feedback-btn" id="openFeedbackBtn">💬 Обратная связь</button>
     </div>
     <div class="footer-bottom">
-      © 2026 ПикмиПицца. Все права защищены. 🍕
+      © 2026 ПикмиПицца. Все права защищены. 🍕<br>
+      <span class="footer-requisites">ИП Соколова Дарья Витальевна · ИНН 590123456789 · ОГРНИП 320590000012345 · г. Пермь, ул. Студенческая, д. 22</span>
     </div>
   </footer>
+
+  <!-- ===== БАННЕР COOKIE ===== -->
+  <div class="cookie-banner" id="cookieBanner">
+    <div class="cookie-banner-text">
+      🍪 Мы используем файлы cookie и данные браузера (localStorage) для работы корзины, темы оформления и истории заказов.
+      Продолжая пользоваться сайтом, вы соглашаетесь с
+      <a href="#" class="legal-link" data-info="privacy">политикой обработки персональных данных</a>.
+    </div>
+    <button class="cookie-banner-btn" id="cookieAcceptBtn">Хорошо, понятно</button>
+  </div>
 
   <!-- ===== СИСТЕМА УВЕДОМЛЕНИЙ ===== -->
   <div class="notification-overlay" id="notificationOverlay">
@@ -492,6 +522,16 @@
           <label>Подтверждение <span class="required">*</span></label>
           <div class="g-recaptcha" data-sitekey="6LfaGLAtAAAAAOYIPQQ7naZ6IoQyHE_sw9e2frwf"></div>
           <div class="field-error" id="recaptchaError">⚠️ Пожалуйста, подтвердите, что вы не робот</div>
+        </div>
+
+        <div class="form-group consent-group">
+          <label class="heart-checkbox consent-checkbox">
+            <input type="checkbox" id="feedbackConsent">
+            <span class="heart-icon empty">🤍</span>
+            <span class="heart-icon filled">❤️</span>
+            <span class="heart-label">Согласен(-на) с <a href="#" class="legal-link" data-info="privacy">обработкой персональных данных</a> <span class="required">*</span></span>
+          </label>
+          <div class="field-error" id="consentError">⚠️ Нужно согласие на обработку персональных данных</div>
         </div>
 
         <div class="modal-actions">
