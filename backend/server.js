@@ -1,18 +1,45 @@
-require('dotenv').config(); // ← НОВАЯ СТРОКА: подключаем "сейф" с паролями
+require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
 const nodemailer = require('nodemailer');
 const bodyParser = require('body-parser');
 const path = require('path');
+const fs = require('fs'); // ← добавили для чтения maintenance.html
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// ===== НАСТРОЙКА РЕЖИМА ОБСЛУЖИВАНИЯ =====
+const MAINTENANCE_MODE = process.env.MAINTENANCE_MODE === 'true';
+const MAINTENANCE_FILE = path.join(__dirname, '..', 'maintenance.html');
 
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
+// ===== ПРОВЕРКА РЕЖИМА ОБСЛУЖИВАНИЯ =====
+// Если MAINTENANCE_MODE=true — все запросы отдают заглушку со статусом 503
+app.use((req, res, next) => {
+  if (!MAINTENANCE_MODE) return next();
+
+  // Разрешаем открыть саму заглушку и её ресурсы (картинки, css)
+  if (req.path === '/maintenance.html' || req.path.startsWith('/img/')) {
+    return next();
+  }
+
+  // Разрешаем health-check (если понадобится)
+  if (req.path === '/health') return res.status(200).send('maintenance');
+
+  fs.readFile(MAINTENANCE_FILE, 'utf8', (err, html) => {
+    if (err) {
+      console.error('❌ Не удалось прочитать maintenance.html:', err);
+      return res.status(503).send('Сайт на обслуживании. Скоро вернёмся!');
+    }
+    res.status(503).set('Content-Type', 'text/html; charset=utf-8').send(html);
+  });
+});
 
 // ===== ГЛАВНОЕ: РАЗДАЧА HTML, CSS, JS =====
 app.use(express.static(__dirname + '/..'));
@@ -23,8 +50,8 @@ const transporter = nodemailer.createTransport({
   port: 465,
   secure: true,
   auth: {
-    user: process.env.EMAIL_USER,   // ← БЫЛО: 'dashkacv8@gmail.com'
-    pass: process.env.EMAIL_PASS    // ← БЫЛО: 'ymwy ixrw hwjg yefd'
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
   }
 });
 
@@ -44,7 +71,7 @@ app.post('/api/feedback', async (req, res) => {
   try {
     const mailOptions = {
       from: `"ПикмиПицца" <${transporter.options.auth.user}>`,
-      to: process.env.EMAIL_USER,   // ← БЫЛО: 'dashkacv8@gmail.com'
+      to: process.env.EMAIL_USER,
       subject: `📩 Новое сообщение от ${name}`,
       html: `
         <h2>📩 Новое сообщение с сайта ПикмиПицца</h2>
@@ -101,4 +128,5 @@ app.listen(PORT, () => {
   console.log(`🚀 Сервер запущен на порту ${PORT}`);
   console.log(`📁 Отдаю файлы из: ${__dirname + '/..'}`);
   console.log(`📧 Почта настроена для: ${transporter.options.auth.user}`);
+  console.log(`🛠️ Режим обслуживания: ${MAINTENANCE_MODE ? 'ВКЛЮЧЁН' : 'выключен'}`);
 });

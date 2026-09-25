@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ПикмиПицца — скоро вернёмся 🍕</title>
+  <link rel="icon" type="image/x-icon" href="img/pngtree-heart-pizza-with-salami-png-image_20830282.png">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', 'Quicksand', system-ui, sans-serif; }
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background:
+        radial-gradient(circle 2px at 10% 20%, rgba(255,255,255,0.9) 0%, transparent 100%),
+        radial-gradient(circle 1.5px at 80% 15%, rgba(255,255,255,0.8) 0%, transparent 100%),
+        radial-gradient(circle 2px at 60% 40%, rgba(255,255,255,0.7) 0%, transparent 100%),
+        radial-gradient(circle 1px at 30% 70%, rgba(255,255,255,0.9) 0%, transparent 100%),
+        linear-gradient(145deg, #ffd6e8 0%, #ffb3d9 30%, #ff9ecf 70%, #ffc1e3 100%);
+      padding: 20px;
+      color: #6b1f4d;
+    }
+    .card {
+      max-width: 560px;
+      width: 100%;
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(10px);
+      border-radius: 56px;
+      padding: 48px 40px;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(255,105,180,0.25), inset 0 1px 0 rgba(255,255,255,0.8);
+      border: 1px solid rgba(255,150,200,0.4);
+    }
+    .logo-img {
+      width: 90px;
+      height: 90px;
+      object-fit: contain;
+      margin-bottom: 16px;
+      animation: float 3s ease-in-out infinite;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotate(-3deg); }
+      50% { transform: translateY(-10px) rotate(3deg); }
+    }
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #ff6b9d, #c084e8, #8b6bcf);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 12px;
+    }
+    .emoji-row { font-size: 2.6rem; margin: 10px 0 18px; letter-spacing: 6px; }
+    p {
+      font-size: 1.05rem;
+      line-height: 1.7;
+      color: #a8447e;
+      margin-bottom: 14px;
+    }
+    .timer {
+      display: inline-block;
+      background: linear-gradient(135deg, #ff6b9d, #c084e8);
+      color: #fff;
+      padding: 10px 28px;
+      border-radius: 60px;
+      font-weight: 700;
+      font-size: 1rem;
+      margin-top: 8px;
+      box-shadow: 0 6px 20px rgba(255,100,200,0.3);
+    }
+    .footer-note {
+      margin-top: 24px;
+      font-size: 0.85rem;
+      color: #c47aa8;
+    }
+    .footer-note a { color: #ff6b9d; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <img src="img/pngtree-heart-pizza-with-salami-png-image_20830282.png" alt="ПикмиПицца" class="logo-img">
+    <h1>ПикмиПицца</h1>
+    <div class="emoji-row">🍕 🛠️ 🍕</div>
+    <p><strong>Мы ненадолго ушли на кухню!</strong></p>
+    <p>Сайт сейчас обновляется, чтобы радовать вас ещё вкуснее.<br>Скоро вернёмся и примем ваш заказ ❤️</p>
+    <div class="timer">⏳ Уже совсем скоро</div>
+    <div class="footer-note">
+      Срочный вопрос? Напишите нам: <a href="mailto:info@picmipizza.ru">info@picmipizza.ru</a>
+    </div>
+  </div>
+</body>
+</html>
