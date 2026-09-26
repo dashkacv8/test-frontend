@@ -19,8 +19,14 @@ const ALLOWED_IPS = (process.env.ALLOWED_IPS || '').split(',').map(s => s.trim()
 app.use((req, res, next) => {
   if (!MAINTENANCE_MODE) return next();
 
-  // Если IP в белом списке — пускаем на сайт как обычно
-  const clientIp = (req.headers['x-forwarded-for'] || req.ip || '').split(',')[0].trim();
+  // Пробуем получить IP из разных заголовков (Render + Cloudflare)
+  const clientIp = (req.headers['true-client-ip'] 
+    || req.headers['cf-connecting-ip'] 
+    || (req.headers['x-forwarded-for'] || '').split(',')[0] 
+    || req.ip || '').trim();
+
+  console.log('🔍 Client IP:', clientIp, '| Allowed:', ALLOWED_IPS);
+
   if (ALLOWED_IPS.includes(clientIp)) return next();
 
   if (req.path === '/maintenance.html' || req.path.startsWith('/img/')) {
@@ -36,7 +42,6 @@ app.use((req, res, next) => {
     res.status(503).set('Content-Type', 'text/html; charset=utf-8').send(html);
   });
 });
-
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
