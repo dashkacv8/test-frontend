@@ -13,6 +13,28 @@ const PORT = process.env.PORT || 3000;
 // ===== НАСТРОЙКА РЕЖИМА ОБСЛУЖИВАНИЯ =====
 const MAINTENANCE_MODE = process.env.MAINTENANCE_MODE === 'true';
 const MAINTENANCE_FILE = path.join(__dirname, '..', 'maintenance.html');
+const ALLOWED_IPS = (process.env.ALLOWED_IPS || '').split(',').map(s => s.trim()).filter(Boolean);
+
+app.use((req, res, next) => {
+  if (!MAINTENANCE_MODE) return next();
+
+  // Если IP в белом списке — пускаем на сайт как обычно
+  const clientIp = (req.headers['x-forwarded-for'] || req.ip || '').split(',')[0].trim();
+  if (ALLOWED_IPS.includes(clientIp)) return next();
+
+  if (req.path === '/maintenance.html' || req.path.startsWith('/img/')) {
+    return next();
+  }
+  if (req.path === '/health') return res.status(200).send('maintenance');
+
+  fs.readFile(MAINTENANCE_FILE, 'utf8', (err, html) => {
+    if (err) {
+      console.error('❌ Не удалось прочитать maintenance.html:', err);
+      return res.status(503).send('Сайт на обслуживании. Скоро вернёмся!');
+    }
+    res.status(503).set('Content-Type', 'text/html; charset=utf-8').send(html);
+  });
+});
 
 // Middleware
 app.use(cors());
