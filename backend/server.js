@@ -47,28 +47,6 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// ===== ПРОВЕРКА РЕЖИМА ОБСЛУЖИВАНИЯ =====
-// Если MAINTENANCE_MODE=true — все запросы отдают заглушку со статусом 503
-app.use((req, res, next) => {
-  if (!MAINTENANCE_MODE) return next();
-
-  // Разрешаем открыть саму заглушку и её ресурсы (картинки, css)
-  if (req.path === '/maintenance.html' || req.path.startsWith('/img/')) {
-    return next();
-  }
-
-  // Разрешаем health-check (если понадобится)
-  if (req.path === '/health') return res.status(200).send('maintenance');
-
-  fs.readFile(MAINTENANCE_FILE, 'utf8', (err, html) => {
-    if (err) {
-      console.error('❌ Не удалось прочитать maintenance.html:', err);
-      return res.status(503).send('Сайт на обслуживании. Скоро вернёмся!');
-    }
-    res.status(503).set('Content-Type', 'text/html; charset=utf-8').send(html);
-  });
-});
-
 // ===== ГЛАВНОЕ: РАЗДАЧА HTML, CSS, JS =====
 app.use(express.static(__dirname + '/..'));
 
@@ -149,6 +127,14 @@ app.post('/api/suggest-address', async (req, res) => {
     console.error('❌ Ошибка DaData:', error);
     res.status(500).json({ error: 'Не удалось получить подсказки адресов' });
   }
+});
+
+// ===== 404: НЕИЗВЕСТНЫЕ АДРЕСА =====
+app.use((req, res) => {
+  if (req.path.startsWith('/api/')) {
+    return res.status(404).json({ success: false, error: 'Не найдено' });
+  }
+  res.status(404).sendFile(path.join(__dirname, '..', '404.html'));
 });
 
 // ===== ЗАПУСК СЕРВЕРА =====

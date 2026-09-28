@@ -5,15 +5,26 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ПикмиПицца</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
-  <!-- Leaflet (карта точек самовывоза) -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="css/pikmi.css">
+  <!-- OpenLayers (карты самовывоза и отслеживания курьера) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@10/ol.css">
   <!-- Google reCAPTCHA -->
   <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-  <link rel="icon" type="image/x-icon" href="img/pngtree-heart-pizza-with-salami-png-image_20830282.png">
+  <link rel="icon" type="image/png" href="img/pngtree-heart-pizza-with-salami-png-image_20830282.png">
 </head>
 
 <body>
+
+    <div class="ticker" aria-hidden="true">
+    <div class="ticker-track">
+      <div class="ticker-group"><span>ПИКМИ МЕНЯ 💗</span><span>горячая пицца 🍕</span><span>доставка по Перми 🛵</span><span>собери свою 🛠️</span><span>крути колесо удачи 🎡</span><span>ПИКМИ МЕНЯ 💗</span><span>горячая пицца 🍕</span><span>доставка по Перми 🛵</span><span>собери свою 🛠️</span><span>крути колесо удачи 🎡</span></div>
+      <div class="ticker-group"><span>ПИКМИ МЕНЯ 💗</span><span>горячая пицца 🍕</span><span>доставка по Перми 🛵</span><span>собери свою 🛠️</span><span>крути колесо удачи 🎡</span><span>ПИКМИ МЕНЯ 💗</span><span>горячая пицца 🍕</span><span>доставка по Перми 🛵</span><span>собери свою 🛠️</span><span>крути колесо удачи 🎡</span></div>
+    </div>
+  </div>
 
   <div class="app">
     <!-- ===== ХЕДЕР ===== -->
@@ -56,7 +67,7 @@
         <button class="category-tab" data-category="sauces">🌶️ Соусы</button>
       </div>
       <div class="catalog-title">
-        <span>🌅</span> Меню
+        <span>💗</span> Меню
       </div>
       <div class="pizza-grid" id="pizzaGrid"></div>
     </section>
@@ -103,9 +114,8 @@
         </div>
         <div class="promo-card">
           <div class="promo-icon">👥</div>
-          <div class="promo-title">Приведи друга</div>
-          <div class="promo-desc">Друг получает скидку 10% на первый заказ, а ты — 100 бонусов после его заказа</div>
-          <div class="promo-code" data-copy title="Нажмите, чтобы скопировать">ДРУГ100</div>
+          <div class="promo-title">Пригласи друга</div>
+          <div class="promo-desc">Ваш персональный реферальный код теперь в личном кабинете — поделитесь им, друг введёт код при регистрации и получит бонус, а вы получите 100 бонусов после его первого заказа</div>
         </div>
       </div>
       <button class="back-to-catalog" id="closePromoBtn" style="margin-top:24px;">← Вернуться в меню</button>
@@ -284,6 +294,7 @@
         <div id="registerForm" style="display:none;">
           <input type="text" id="regName" placeholder="Имя" value="Анна">
           <input type="text" id="regPhone" placeholder="Номер телефона" value="+7 999 123-45-67">
+          <input type="text" id="regReferralCode" placeholder="Реферальный код друга (необязательно)">
           <label class="heart-checkbox consent-checkbox" style="margin:12px 0;">
             <input type="checkbox" id="regConsent" checked>
             <span class="heart-icon empty">🤍</span>
@@ -317,7 +328,28 @@
             <span class="label">Сохранённая карта</span>
             <span class="value" id="savedCardDisplay">**** 4589</span>
           </div>
+          <div class="info-item">
+            <span class="label">Ваш реферальный код</span>
+            <span class="value promo-code" id="referralCodeDisplay" data-copy title="Нажмите, чтобы скопировать">—</span>
+          </div>
+
+          <div class="loyalty-progress-block">
+            <div class="loyalty-tier-row">
+              <span class="loyalty-tier-icon" id="loyaltyTierIcon">🥉</span>
+              <span class="loyalty-tier-name" id="loyaltyTierName">Bronze</span>
+            </div>
+            <div class="loyalty-progress-bar">
+              <div class="loyalty-progress-fill" id="loyaltyProgressFill"></div>
+            </div>
+            <div class="loyalty-progress-text" id="loyaltyProgressText"></div>
+          </div>
+
           <button class="logout-btn" id="logoutBtn">Выйти</button>
+        </div>
+
+        <div class="profile-badges">
+          <h3 style="color:#f0e6f0; margin-bottom:16px;">🏆 Достижения</h3>
+          <div class="badges-grid" id="badgesGrid"></div>
         </div>
 
         <div class="profile-orders">
@@ -453,6 +485,50 @@
     </div>
   </div>
 
+  <!-- ===== МОДАЛКА КОНСТРУКТОРА СВОЕЙ ПИЦЦЫ ===== -->
+  <div class="modal-overlay" id="constructorModal">
+    <div class="modal-box constructor-modal-box">
+      <h2>🛠️ Собери свою пиццу</h2>
+
+      <div style="font-weight:600; color:#f0e6f0; margin-bottom:6px;">1. Выбери размер:</div>
+      <div class="size-selector" id="constructorSizeSelector">
+        <button class="size-btn" data-size="25" data-multiplier="0.85">
+          25 см
+          <span class="size-price"></span>
+        </button>
+        <button class="size-btn active" data-size="32" data-multiplier="1">
+          32 см
+          <span class="size-price"></span>
+        </button>
+        <button class="size-btn" data-size="40" data-multiplier="1.25">
+          40 см
+          <span class="size-price"></span>
+        </button>
+      </div>
+
+      <div class="constructor-section">
+        <label>2. Выбери соус:</label>
+        <div class="constructor-pill-group" id="constructorSauceGroup"></div>
+      </div>
+
+      <div class="constructor-section">
+        <label>3. Выбери сыр:</label>
+        <div class="constructor-pill-group" id="constructorCheeseGroup"></div>
+      </div>
+
+      <div class="constructor-section">
+        <label>4. Выбери начинки (можно несколько):</label>
+        <div class="toppings-group constructor-toppings-grid" id="constructorToppingsGroup"></div>
+      </div>
+
+      <div class="modal-actions">
+        <div class="modal-live-price" id="constructorLivePrice">0 ₽</div>
+        <button class="btn-cancel" id="constructorCancelBtn">Отмена</button>
+        <button class="btn-add-to-cart" id="constructorAddBtn">➕ В корзину</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ===== МОДАЛКА ОПЛАТЫ ===== -->
   <div class="modal-overlay" id="paymentModal">
     <div class="modal-box">
@@ -574,6 +650,20 @@
         </div>
       </div>
       <div class="order-status-message" id="orderStatusMessage">Приняли ваш заказ, начинаем готовить 🍕</div>
+
+      <div class="courier-card" id="courierCard" style="display:none;">
+        <div class="courier-avatar" id="courierAvatar">🛵</div>
+        <div class="courier-info">
+          <div class="courier-name" id="courierName">Курьер</div>
+          <div class="courier-meta">
+            <span id="courierRating">⭐ 4.9</span>
+            <span id="courierPhone">+7 999 000-00-00</span>
+          </div>
+        </div>
+        <a class="courier-call-btn" id="courierCallBtn" href="tel:" title="Позвонить курьеру">📞</a>
+      </div>
+      <div class="courier-map" id="courierMap" style="display:none;"></div>
+
       <div class="modal-actions">
         <button class="btn-add-to-cart" id="orderStatusCloseBtn"
           style="width:100%;justify-content:center;">Хорошо</button>
@@ -581,7 +671,51 @@
     </div>
   </div>
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- ===== LIVE-УВЕДОМЛЕНИЯ (СОЦИАЛЬНОЕ ДОКАЗАТЕЛЬСТВО) ===== -->
+  <div class="social-toast" id="socialToast">
+    <div class="social-toast-emoji" id="socialToastEmoji">🍕</div>
+    <div class="social-toast-body">
+      <div class="social-toast-title" id="socialToastTitle"></div>
+      <div class="social-toast-text" id="socialToastText"></div>
+    </div>
+  </div>
+
+  <!-- ===== КОЛЕСО УДАЧИ ===== -->
+  <button class="wheel-fab" id="wheelFabBtn" title="Колесо удачи">
+    <span class="wheel-fab-icon">🎡</span>
+    <span class="wheel-fab-badge" id="wheelFabBadge">1</span>
+  </button>
+
+  <div class="modal-overlay wheel-modal" id="wheelModal">
+    <div class="modal-box wheel-modal-box">
+      <h2>🎡 Колесо удачи</h2>
+      <button class="modal-close-btn" id="wheelCloseBtn">✕</button>
+
+      <div class="wheel-wrap">
+        <div class="wheel-pointer">▼</div>
+        <svg class="wheel-svg" id="wheelSvg" viewBox="0 0 320 320">
+          <g id="wheelGroup">
+            <!-- сектора рисуются в JS -->
+          </g>
+        </svg>
+      </div>
+
+      <div class="wheel-legend" id="wheelLegend"></div>
+
+      <div class="wheel-status" id="wheelStatus">Один раз в день — крутите колесо и получайте приз!</div>
+
+      <button class="wheel-spin-btn" id="wheelSpinBtn">🎯 Крутить!</button>
+
+      <div class="wheel-result" id="wheelResult" style="display:none;">
+        <div class="wheel-result-emoji" id="wheelResultEmoji">🎉</div>
+        <div class="wheel-result-title" id="wheelResultTitle">Ваш приз</div>
+        <div class="wheel-result-text" id="wheelResultText"></div>
+        <button class="wheel-result-btn" id="wheelResultCloseBtn">Отлично!</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/ol@10/dist/ol.js"></script>
   <script src="js/script.js"></script>
 </body>
 

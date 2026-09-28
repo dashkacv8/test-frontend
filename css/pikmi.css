@@ -1,0 +1,336 @@
+/* =====================================================================
+   ПИКМИ — тема «наклейки»: тёплый крем, кислотно-розовый, сырно-жёлтый,
+   толстые тёмные контуры и жёсткие тени. Подключается ПОСЛЕ style.css.
+   ===================================================================== */
+
+:root {
+  --gutter: clamp(16px, 4vw, 64px);
+  --line: #3a1024;
+  --pop: #3a1024;
+  --ink-soft: rgba(58, 16, 36, 0.18);
+  --hot: #ff2e7e;
+  --hot-2: #ff6fa5;
+  --cherry: #e8203c;
+  --cheese: #ffc93c;
+  --cheese-soft: #fff4cc;
+  --sticker-bg: #ffd6e6;
+  --panel: #ffffff;
+
+  --text-main: #3a1024;
+  --text-muted: #8a3a5a;
+  --text-muted2: #6e2a48;
+  --text-muted3: #a8627f;
+  --text-muted4: #d9a3b8;
+  --card-bg-strong: rgba(255, 250, 245, 0.96);
+  --card-bg-solid: #fffaf5;
+  --page-surround: #fff0e3;
+  --shadow-color: rgba(58, 16, 36, 0.25);
+}
+
+body.dark-theme {
+  --line: #ff7fb0;
+  --pop: #10030a;
+  --ink-soft: rgba(255, 127, 176, 0.28);
+  --cheese-soft: #4a3a10;
+  --sticker-bg: #5a1f3d;
+  --panel: #3a1329;
+
+  --text-main: #ffe9f1;
+  --text-muted: #e0a6bf;
+  --text-muted2: #d18fae;
+  --text-muted3: #b87393;
+  --text-muted4: #9c6580;
+  --card-bg-strong: rgba(43, 15, 32, 0.96);
+  --card-bg-solid: #2b0f20;
+  --page-surround: #1f0915;
+  --shadow-color: rgba(0, 0, 0, 0.6);
+}
+
+/* ---------- ФОН И ПОЛНАЯ ШИРИНА ---------- */
+body {
+  background-color: var(--page-surround);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Cpath d='M32 46 C10 30 14 14 26 14 C30 14 32 17 32 19 C32 17 34 14 38 14 C50 14 54 30 32 46 Z' fill='%23ff2e7e' fill-opacity='.07'/%3E%3C/svg%3E");
+  background-attachment: fixed;
+}
+
+.app {
+  max-width: none;
+  width: 100%;
+  background: transparent;
+  backdrop-filter: none;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0 var(--gutter) 56px;
+}
+
+.footer {
+  max-width: none;
+  width: 100%;
+  margin: 0;
+  border: none;
+  border-top: 4px solid var(--hot);
+  border-radius: 0;
+  background: #3a1024;
+  padding: 28px var(--gutter);
+}
+
+/* ---------- БЕГУЩАЯ СТРОКА ---------- */
+.ticker {
+  background: var(--cheese);
+  color: #3a1024;
+  border-bottom: 3px solid var(--line);
+  overflow: hidden;
+  white-space: nowrap;
+  font-family: 'Baloo 2', 'Segoe UI', sans-serif;
+  font-weight: 800;
+  font-size: 0.95rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 6px 0;
+}
+.ticker-track { display: inline-flex; animation: tickerMove 34s linear infinite; }
+.ticker-group { display: flex; flex-shrink: 0; }
+.ticker-group span { padding: 0 26px; }
+@keyframes tickerMove { to { transform: translateX(-50%); } }
+
+/* ---------- ШАПКА ---------- */
+.header {
+  margin: 0 calc(var(--gutter) * -1) 32px;
+  padding: 22px var(--gutter);
+  background: var(--hot);
+  border-bottom: 3px solid var(--line);
+  gap: 16px 24px;
+}
+
+.logo h1 {
+  color: #fff;
+  text-shadow: 3px 3px 0 var(--pop);
+  letter-spacing: 0;
+}
+
+.header-tagline { color: #fff; opacity: 0.95; }
+
+.nav-menu {
+  background: var(--panel);
+  border: 3px solid var(--line);
+  box-shadow: 4px 4px 0 var(--pop);
+}
+.nav-item { color: var(--text-main); }
+.nav-item:hover { background: var(--sticker-bg); color: var(--text-main); }
+.nav-item.active { background: var(--cheese); color: #3a1024; box-shadow: none; }
+
+.theme-toggle-btn {
+  background: var(--panel);
+  border: 3px solid var(--line);
+  box-shadow: 3px 3px 0 var(--pop);
+}
+.theme-toggle-btn:hover { background: var(--sticker-bg); }
+
+.cart-link-btn,
+.profile-btn {
+  background: var(--cheese);
+  color: #3a1024;
+  border: 3px solid var(--line);
+  box-shadow: 4px 4px 0 var(--pop);
+}
+.cart-link-btn:hover,
+.profile-btn:hover {
+  background: #ffd75e;
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 var(--pop);
+}
+.cart-badge { background: var(--hot); color: #fff; border: 2px solid var(--line); }
+
+/* ---------- КАТЕГОРИИ И ЗАГОЛОВОК ---------- */
+.category-tabs { background: transparent; border: none; padding: 0; }
+.category-tab {
+  background: var(--panel);
+  border: 3px solid var(--line);
+  color: var(--text-main);
+  box-shadow: 3px 3px 0 var(--pop);
+}
+.category-tab:hover { background: var(--sticker-bg); transform: translate(-1px, -1px); }
+.category-tab.active { background: var(--hot); color: #fff; box-shadow: 3px 3px 0 var(--pop); }
+
+.catalog-title { font-size: 2.6rem; font-weight: 800; letter-spacing: -0.5px; }
+.catalog-title span {
+  width: 54px;
+  height: 54px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--cheese);
+  border: 3px solid var(--line);
+  box-shadow: 3px 3px 0 var(--pop);
+  font-size: 1.6rem;
+  transform: rotate(-8deg);
+}
+
+/* ---------- КАРТОЧКИ ---------- */
+.pizza-grid {
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 32px;
+}
+
+.pizza-card {
+  background: var(--panel);
+  backdrop-filter: none;
+  border: 3px solid var(--line);
+  border-radius: 28px;
+  box-shadow: 6px 6px 0 var(--pop);
+}
+.pizza-card:hover {
+  background: var(--panel);
+  border-color: var(--line);
+  transform: translate(-3px, -3px) rotate(-0.4deg);
+  box-shadow: 9px 9px 0 var(--pop);
+}
+.pizza-card.constructor-card {
+  background: var(--cheese-soft);
+  border: 3px dashed var(--line);
+}
+
+.pizza-emoji {
+  width: 96px;
+  height: 96px;
+  margin: 0 auto 10px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--sticker-bg);
+  border: 3px solid var(--line);
+  font-size: 3rem;
+}
+.pizza-price {
+  align-self: center;
+  background: var(--cheese);
+  color: #3a1024;
+  border: 2.5px solid var(--line);
+  border-radius: 40px;
+  padding: 2px 18px;
+  transform: rotate(-3deg);
+  font-family: 'Baloo 2', 'Segoe UI', sans-serif;
+  font-weight: 800;
+}
+
+.pizza-card .add-to-cart-btn,
+.btn-add-to-cart,
+.order-btn.active,
+.login-btn,
+.submit-feedback-btn,
+.wheel-spin-btn,
+.wheel-result-btn,
+.cookie-banner-btn,
+.map-point-select-btn,
+.footer-feedback-btn {
+  background: var(--hot);
+  color: #fff;
+  border: 3px solid var(--line);
+  box-shadow: 3px 3px 0 var(--pop);
+}
+.pizza-card .add-to-cart-btn:hover,
+.btn-add-to-cart:hover,
+.order-btn.active:hover,
+.login-btn:hover,
+.wheel-spin-btn:hover:not(:disabled),
+.cookie-banner-btn:hover {
+  background: var(--hot-2);
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0 var(--pop);
+}
+
+/* ---------- ПАНЕЛИ, КОТОРЫЕ РАНЬШЕ БЫЛИ ПРОЗРАЧНЫМИ ---------- */
+.feedback-form input, .feedback-form textarea, .toppings-group label,
+.cart-item, .add-to-order-section, .add-to-order-item, .payment-section,
+.payment-detail, .payment-detail input, .bonus-section, .promo-section,
+.promo-section input, .delivery-section, .delivery-address-input,
+.delivery-select, .order-summary, .back-to-catalog, .promo-card,
+.profile-auth input, .profile-orders .order-item, .size-btn, .btn-cancel,
+.faq-item, .pickup-point-item, .map-point-card, .constructor-pill {
+  background: var(--panel);
+  border-color: var(--ink-soft);
+}
+
+.size-btn.active, .constructor-pill.active {
+  background: var(--hot);
+  color: #fff;
+  border-color: var(--line);
+}
+
+.cart-page, .promo-page, .profile-page, .faq-page, .map-page {
+  background: var(--card-bg-solid);
+  border: 3px solid var(--line);
+  border-radius: 32px;
+  box-shadow: 8px 8px 0 var(--pop);
+}
+
+.loyalty-progress-bar { background: var(--ink-soft); }
+.loyalty-progress-fill { background: var(--hot); }
+.badge-item { background: var(--panel); }
+
+/* ---------- МОДАЛКИ, ТОСТЫ, БАННЕРЫ ---------- */
+.modal-box {
+  border: 3px solid var(--line);
+  border-radius: 32px;
+  box-shadow: 8px 8px 0 var(--pop);
+}
+.cookie-banner, .social-toast {
+  border: 3px solid var(--line);
+  border-radius: 22px;
+  box-shadow: 5px 5px 0 var(--pop);
+}
+
+/* Старые встроенные «белые» цвета текста — на светлой теме были невидимы */
+[style*="f0e6f0"] { color: var(--text-main) !important; }
+input[style*="rgba(255,255,255,0.05)"] {
+  background: var(--panel) !important;
+  border-color: var(--ink-soft) !important;
+}
+
+/* ---------- КОЛЕСО УДАЧИ ---------- */
+.wheel-fab {
+  background: var(--cheese);
+  border: 3px solid var(--line);
+  box-shadow: 4px 4px 0 var(--pop);
+}
+.wheel-fab-badge { background: var(--hot); color: #fff; border-color: var(--line); }
+
+.wheel-modal-box { max-width: 460px; max-height: 94vh; overflow-y: auto; }
+.wheel-wrap {
+  width: min(84vw, 340px);
+  height: min(84vw, 340px);
+  margin: 14px auto 14px;
+}
+.wheel-svg { box-shadow: none; border: 4px solid var(--line); background: var(--cheese-soft); }
+.wheel-pointer { color: var(--cherry); font-size: 2.2rem; top: -14px; text-shadow: 0 2px 0 var(--pop); }
+
+.wheel-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.wheel-legend-chip {
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: var(--sticker-bg);
+  border: 2px solid var(--line);
+  color: var(--text-main);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.wheel-status { color: var(--text-main); font-weight: 600; }
+.wheel-result { background: var(--sticker-bg); border: 3px solid var(--line); }
+
+/* ---------- МЕТКИ КАРТ ---------- */
+.map-pin { background: var(--hot); border-color: #fff; outline: 3px solid var(--line); }
+.map-pin::after { border-top-color: var(--line); bottom: -10px; }
+.map-pin.selected { background: var(--cheese); }
+.map-pin.selected::after { border-top-color: var(--line); }
+
+@media (prefers-reduced-motion: reduce) {
+  .ticker-track { animation: none; }
+}

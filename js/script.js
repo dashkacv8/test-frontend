@@ -131,6 +131,8 @@
     bonuses: 150,
     discount: 5,
     savedCard: '**** 4589',
+    referralCode: 'АННА4521',
+    referredBy: null,
     orders: []
   };
 
@@ -203,6 +205,7 @@
   const bonusDisplay = document.getElementById('bonusDisplay');
   const discountDisplay = document.getElementById('discountDisplay');
   const savedCardDisplay = document.getElementById('savedCardDisplay');
+  const referralCodeDisplay = document.getElementById('referralCodeDisplay');
   const ordersList = document.getElementById('ordersList');
 
   // Модалки
@@ -220,6 +223,14 @@
   const statusLine2 = document.getElementById('statusLine2');
   const orderStatusMessage = document.getElementById('orderStatusMessage');
   const orderStatusCloseBtn = document.getElementById('orderStatusCloseBtn');
+
+  const courierCard = document.getElementById('courierCard');
+  const courierAvatar = document.getElementById('courierAvatar');
+  const courierName = document.getElementById('courierName');
+  const courierRating = document.getElementById('courierRating');
+  const courierPhone = document.getElementById('courierPhone');
+  const courierCallBtn = document.getElementById('courierCallBtn');
+  const courierMapEl = document.getElementById('courierMap');
 
   const feedbackModal = document.getElementById('feedbackModal');
   const feedbackForm = document.getElementById('feedbackForm');
@@ -244,6 +255,36 @@
   const orderConsent = document.getElementById('orderConsent');
   const cookieBanner = document.getElementById('cookieBanner');
   const cookieAcceptBtn = document.getElementById('cookieAcceptBtn');
+
+  // Колесо удачи
+  const wheelFabBtn = document.getElementById('wheelFabBtn');
+  const wheelFabBadge = document.getElementById('wheelFabBadge');
+  const wheelModal = document.getElementById('wheelModal');
+  const wheelCloseBtn = document.getElementById('wheelCloseBtn');
+  const wheelGroup = document.getElementById('wheelGroup');
+  const wheelSvg = document.getElementById('wheelSvg');
+  const wheelStatus = document.getElementById('wheelStatus');
+  const wheelSpinBtn = document.getElementById('wheelSpinBtn');
+  const wheelResult = document.getElementById('wheelResult');
+  const wheelResultEmoji = document.getElementById('wheelResultEmoji');
+  const wheelResultTitle = document.getElementById('wheelResultTitle');
+  const wheelResultText = document.getElementById('wheelResultText');
+  const wheelResultCloseBtn = document.getElementById('wheelResultCloseBtn');
+
+  // Прогресс уровня лояльности
+  const loyaltyTierIcon = document.getElementById('loyaltyTierIcon');
+  const loyaltyTierName = document.getElementById('loyaltyTierName');
+  const loyaltyProgressFill = document.getElementById('loyaltyProgressFill');
+  const loyaltyProgressText = document.getElementById('loyaltyProgressText');
+
+  // Достижения
+  const badgesGrid = document.getElementById('badgesGrid');
+
+  // Live-уведомления (социальное доказательство)
+  const socialToast = document.getElementById('socialToast');
+  const socialToastEmoji = document.getElementById('socialToastEmoji');
+  const socialToastTitle = document.getElementById('socialToastTitle');
+  const socialToastText = document.getElementById('socialToastText');
 
   // Уведомления
   const notifOverlay = document.getElementById('notificationOverlay');
@@ -367,7 +408,33 @@
   }
 
   // ---------- РЕНДЕР КАТАЛОГА ----------
+  let catalogLoading = true;
+  let catalogSkeletonScheduled = false;
+
+  function renderCatalogSkeleton() {
+    pizzaGrid.innerHTML = Array.from({ length: 8 }, () => `
+      <div class="pizza-card skeleton-card">
+        <div class="sk sk-emoji"></div>
+        <div class="sk sk-line sk-title"></div>
+        <div class="sk sk-line"></div>
+        <div class="sk sk-line sk-short"></div>
+        <div class="sk sk-btn"></div>
+      </div>
+    `).join('');
+  }
+
   function renderCatalog(category = currentCategory) {
+    if (catalogLoading) {
+      renderCatalogSkeleton();
+      if (!catalogSkeletonScheduled) {
+        catalogSkeletonScheduled = true;
+        setTimeout(() => {
+          catalogLoading = false;
+          renderCatalog(currentCategory);
+        }, 650);
+      }
+      return;
+    }
     pizzaGrid.innerHTML = '';
     const items = menuData[category] || [];
 
@@ -414,7 +481,9 @@
       if (addBtn) {
         addBtn.addEventListener('click', (e) => {
           e.stopPropagation();
-          if (category === 'pizza') {
+          if (item.isConstructor) {
+            openConstructorModal();
+          } else if (category === 'pizza') {
             openModal(item.id);
           } else {
             addNonPizzaToCart(item, category, e.currentTarget);
@@ -426,7 +495,9 @@
       if (plusBtn) {
         plusBtn.addEventListener('click', (e) => {
           e.stopPropagation();
-          if (category === 'pizza') {
+          if (item.isConstructor) {
+            openConstructorModal();
+          } else if (category === 'pizza') {
             openModal(item.id);
           } else {
             addNonPizzaToCart(item, category, e.currentTarget);
@@ -616,6 +687,188 @@
     checkPromoValidity();
   }
 
+  // ---------- КОНСТРУКТОР СВОЕЙ ПИЦЦЫ ----------
+  const CONSTRUCTOR_BASE_PRICE = 280;
+  const CONSTRUCTOR_SAUCES = [
+    { id: 'tomato', name: 'Томатный соус', price: 0 },
+    { id: 'cream', name: 'Сливочный соус', price: 30 },
+    { id: 'bbq', name: 'Соус барбекю', price: 40 }
+  ];
+  const CONSTRUCTOR_CHEESE = [
+    { id: 'mozzarella', name: 'Моцарелла', price: 0 },
+    { id: 'double', name: 'Двойной сыр', price: 70 },
+    { id: 'cheddar', name: 'Чеддер', price: 60 }
+  ];
+  const CONSTRUCTOR_TOPPINGS = [
+    { id: 'pepperoni', name: 'Пепперони', emoji: '🌶️', price: 60 },
+    { id: 'ham', name: 'Ветчина', emoji: '🍖', price: 55 },
+    { id: 'mushrooms', name: 'Грибы', emoji: '🍄', price: 30 },
+    { id: 'olives', name: 'Оливки', emoji: '🫒', price: 35 },
+    { id: 'bacon', name: 'Бекон', emoji: '🥓', price: 60 },
+    { id: 'pepper', name: 'Перец', emoji: '🫑', price: 40 },
+    { id: 'onion', name: 'Лук', emoji: '🧅', price: 20 },
+    { id: 'pineapple', name: 'Ананас', emoji: '🍍', price: 45 },
+    { id: 'tomatoes', name: 'Томаты', emoji: '🍅', price: 30 },
+    { id: 'jalapeno', name: 'Халапеньо', emoji: '🌶️', price: 35 }
+  ];
+
+  const constructorModal = document.getElementById('constructorModal');
+  const constructorSizeSelector = document.getElementById('constructorSizeSelector');
+  const constructorSauceGroup = document.getElementById('constructorSauceGroup');
+  const constructorCheeseGroup = document.getElementById('constructorCheeseGroup');
+  const constructorToppingsGroup = document.getElementById('constructorToppingsGroup');
+  const constructorLivePrice = document.getElementById('constructorLivePrice');
+  const constructorCancelBtn = document.getElementById('constructorCancelBtn');
+  const constructorAddBtn = document.getElementById('constructorAddBtn');
+
+  let constructorSauceId = CONSTRUCTOR_SAUCES[0].id;
+  let constructorCheeseId = CONSTRUCTOR_CHEESE[0].id;
+  let constructorToppingIds = [];
+
+  function renderConstructorOptions() {
+    constructorSauceGroup.innerHTML = CONSTRUCTOR_SAUCES.map(s => `
+      <button type="button" class="constructor-pill" data-sauce="${s.id}">${s.name}${s.price ? ` (+${s.price}₽)` : ''}</button>
+    `).join('');
+
+    constructorCheeseGroup.innerHTML = CONSTRUCTOR_CHEESE.map(c => `
+      <button type="button" class="constructor-pill" data-cheese="${c.id}">${c.name}${c.price ? ` (+${c.price}₽)` : ''}</button>
+    `).join('');
+
+    constructorToppingsGroup.innerHTML = CONSTRUCTOR_TOPPINGS.map(t => `
+      <label class="heart-checkbox">
+        <input type="checkbox" value="${t.id}">
+        <span class="heart-icon empty">🤍</span>
+        <span class="heart-icon filled">❤️</span>
+        <span class="heart-label">${t.emoji} ${t.name}</span>
+        <span class="heart-price">+${t.price}₽</span>
+      </label>
+    `).join('');
+
+    constructorSauceGroup.querySelectorAll('.constructor-pill').forEach(btn => {
+      btn.addEventListener('click', () => {
+        constructorSauceId = btn.dataset.sauce;
+        constructorSauceGroup.querySelectorAll('.constructor-pill').forEach(b => b.classList.toggle('active', b === btn));
+        updateConstructorPrice();
+      });
+    });
+
+    constructorCheeseGroup.querySelectorAll('.constructor-pill').forEach(btn => {
+      btn.addEventListener('click', () => {
+        constructorCheeseId = btn.dataset.cheese;
+        constructorCheeseGroup.querySelectorAll('.constructor-pill').forEach(b => b.classList.toggle('active', b === btn));
+        updateConstructorPrice();
+      });
+    });
+
+    constructorToppingsGroup.querySelectorAll('input').forEach(cb => {
+      cb.addEventListener('change', updateConstructorPrice);
+    });
+
+    constructorSizeSelector.querySelectorAll('.size-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        constructorSizeSelector.querySelectorAll('.size-btn').forEach(b => b.classList.toggle('active', b === btn));
+        updateConstructorPrice();
+      });
+    });
+  }
+
+  function getConstructorMultiplier() {
+    const active = constructorSizeSelector.querySelector('.size-btn.active');
+    return active ? parseFloat(active.dataset.multiplier) : 1;
+  }
+
+  function getConstructorSize() {
+    const active = constructorSizeSelector.querySelector('.size-btn.active');
+    return active ? parseInt(active.dataset.size) : 32;
+  }
+
+  function updateConstructorPrice() {
+    const sauce = CONSTRUCTOR_SAUCES.find(s => s.id === constructorSauceId);
+    const cheese = CONSTRUCTOR_CHEESE.find(c => c.id === constructorCheeseId);
+    const toppingIds = Array.from(constructorToppingsGroup.querySelectorAll('input:checked')).map(cb => cb.value);
+    const toppingsSum = toppingIds.reduce((sum, id) => {
+      const t = CONSTRUCTOR_TOPPINGS.find(x => x.id === id);
+      return sum + (t ? t.price : 0);
+    }, 0);
+
+    const multiplier = getConstructorMultiplier();
+    const total = Math.round(CONSTRUCTOR_BASE_PRICE * multiplier) + sauce.price + cheese.price + toppingsSum;
+    constructorLivePrice.textContent = `${total} ₽`;
+    return total;
+  }
+
+  function openConstructorModal() {
+    renderConstructorOptions();
+
+    constructorSizeSelector.querySelectorAll('.size-btn').forEach(btn => {
+      const mult = parseFloat(btn.dataset.multiplier);
+      btn.querySelector('.size-price').textContent = `${Math.round(CONSTRUCTOR_BASE_PRICE * mult)} ₽`;
+      btn.classList.toggle('active', btn.dataset.size === '32');
+    });
+
+    constructorSauceId = CONSTRUCTOR_SAUCES[0].id;
+    constructorCheeseId = CONSTRUCTOR_CHEESE[0].id;
+    constructorSauceGroup.querySelector('.constructor-pill').classList.add('active');
+    constructorCheeseGroup.querySelector('.constructor-pill').classList.add('active');
+
+    updateConstructorPrice();
+    constructorModal.classList.add('open');
+  }
+
+  function closeConstructorModal() {
+    constructorModal.classList.remove('open');
+  }
+
+  function addConstructorPizzaToCart() {
+    const sauce = CONSTRUCTOR_SAUCES.find(s => s.id === constructorSauceId);
+    const cheese = CONSTRUCTOR_CHEESE.find(c => c.id === constructorCheeseId);
+    const toppingIds = Array.from(constructorToppingsGroup.querySelectorAll('input:checked')).map(cb => cb.value);
+    const toppingNames = toppingIds.map(id => {
+      const t = CONSTRUCTOR_TOPPINGS.find(x => x.id === id);
+      return t ? `${t.emoji} ${t.name}` : id;
+    });
+    const size = getConstructorSize();
+    const totalPrice = updateConstructorPrice();
+    const description = [sauce.name, cheese.name, ...toppingNames];
+
+    const existing = cart.find(item =>
+      item.id === 0 &&
+      item.size === size &&
+      JSON.stringify(item.toppings) === JSON.stringify(description)
+    );
+
+    if (existing) {
+      existing.quantity += 1;
+    } else {
+      cart.push({
+        id: 0,
+        name: '🛠️ Своя пицца',
+        size: size,
+        toppings: description,
+        price: totalPrice,
+        quantity: 1,
+        isPizza: true,
+        category: 'pizza'
+      });
+    }
+
+    flyToCart(constructorAddBtn, '🛠️');
+    closeConstructorModal();
+    renderCatalog(currentCategory);
+    renderCart();
+    updateBadge();
+    updateOrderButton();
+    updateSummary();
+    checkPromoValidity();
+    showNotification('success', '🛠️ Готово!', 'Ваша авторская пицца добавлена в корзину');
+  }
+
+  constructorCancelBtn.addEventListener('click', closeConstructorModal);
+  constructorAddBtn.addEventListener('click', addConstructorPizzaToCart);
+  constructorModal.addEventListener('click', (e) => {
+    if (e.target === constructorModal) closeConstructorModal();
+  });
+
   // ---------- БЛОК "ДОБАВИТЬ К ЗАКАЗУ" ----------
   function renderAddToOrder() {
     addToOrderGrid.innerHTML = '';
@@ -703,6 +956,7 @@
   function updateBadge() {
     const total = cart.reduce((sum, item) => sum + item.quantity, 0);
     cartBadge.textContent = total;
+    document.title = total > 0 ? `(${total}) ПикмиПицца` : 'ПикмиПицца';
   }
 
   // ---------- СУММА ЗАКАЗА ----------
@@ -973,6 +1227,9 @@
     statusLine2.classList.remove('filled');
     orderStatusMessage.textContent = labels.msgStep1;
     order.status = 'preparing';
+    courierCard.style.display = 'none';
+    courierMapEl.style.display = 'none';
+    stopCourierTracking();
 
     orderStatusModal.classList.add('open');
 
@@ -983,6 +1240,7 @@
       orderStatusMessage.textContent = labels.msgStep2;
       order.status = 'onTheWay';
       if (isLoggedIn) updateProfileUI();
+      if (type === 'delivery') initCourierTracking();
     }, 4000);
 
     const t2 = setTimeout(() => {
@@ -1002,6 +1260,92 @@
     if (orderStatusModal._timers) {
       orderStatusModal._timers.forEach(clearTimeout);
     }
+    stopCourierTracking();
+  }
+
+  // ---------- ОТСЛЕЖИВАНИЕ КУРЬЕРА ----------
+  const COURIER_NAMES = ['Максим', 'Артём', 'Иван', 'Дамир', 'Роман', 'Никита', 'Егор', 'Тимур'];
+  const PIZZERIA_COORDS = [58.0105, 56.2502];
+  let courierMapInstance = null;
+  let courierMarker = null;
+  let courierMoveInterval = null;
+
+  function randomCourierPhone() {
+    const seg = () => String(Math.floor(Math.random() * 90) + 10);
+    return `+7 9${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)} ${seg()}${Math.floor(Math.random() * 9)}-${seg()}-${seg()}`;
+  }
+
+  function initCourierTracking() {
+    const name = COURIER_NAMES[Math.floor(Math.random() * COURIER_NAMES.length)];
+    const rating = (4.6 + Math.random() * 0.4).toFixed(1);
+    const phone = randomCourierPhone();
+
+    courierAvatar.textContent = '🛵';
+    courierName.textContent = name;
+    courierRating.textContent = `⭐ ${rating}`;
+    courierPhone.textContent = phone;
+    courierCallBtn.href = 'tel:' + phone.replace(/[^\d+]/g, '');
+
+    courierCard.style.display = 'flex';
+    courierMapEl.style.display = 'block';
+
+    if (typeof ol === 'undefined') return;
+
+    const destLat = PIZZERIA_COORDS[0] + (Math.random() - 0.5) * 0.035;
+    const destLng = PIZZERIA_COORDS[1] + (Math.random() - 0.5) * 0.045;
+    const startXY = ol.proj.fromLonLat([PIZZERIA_COORDS[1], PIZZERIA_COORDS[0]]);
+    const destXY = ol.proj.fromLonLat([destLng, destLat]);
+
+    function makePin(text, extraClass, coord) {
+      const el = document.createElement('div');
+      el.className = 'map-pin ' + extraClass;
+      el.textContent = text;
+      const overlay = new ol.Overlay({ element: el, position: coord, positioning: 'bottom-center', offset: [0, -8] });
+      courierMapInstance.addOverlay(overlay);
+      return overlay;
+    }
+
+    setTimeout(() => {
+      if (!courierMapInstance) {
+        courierMapInstance = new ol.Map({
+          target: 'courierMap',
+          layers: [new ol.layer.Tile({ source: new ol.source.OSM() })],
+          controls: ol.control.defaults.defaults({ attribution: false, zoom: false, rotate: false })
+            .extend([new ol.control.Attribution({ collapsible: false })]),
+          interactions: ol.interaction.defaults.defaults({
+            dragPan: false, mouseWheelZoom: false, doubleClickZoom: false,
+            pinchZoom: false, keyboard: false, altShiftDragRotate: false, pinchRotate: false
+          }),
+          view: new ol.View({ center: startXY, zoom: 13 })
+        });
+      } else {
+        courierMapInstance.getOverlays().clear();
+      }
+      courierMapInstance.updateSize();
+
+      makePin('🏠', 'home', destXY);
+      courierMarker = makePin('🛵', 'courier', startXY);
+
+      courierMapInstance.getView().fit(ol.extent.boundingExtent([startXY, destXY]), {
+        padding: [45, 45, 45, 45], maxZoom: 15
+      });
+
+      const totalSteps = 40;
+      let stepCount = 0;
+      clearInterval(courierMoveInterval);
+      courierMoveInterval = setInterval(() => {
+        stepCount++;
+        const t = Math.min(1, stepCount / totalSteps);
+        const lat = PIZZERIA_COORDS[0] + (destLat - PIZZERIA_COORDS[0]) * t;
+        const lng = PIZZERIA_COORDS[1] + (destLng - PIZZERIA_COORDS[1]) * t;
+        if (courierMarker) courierMarker.setPosition(ol.proj.fromLonLat([lng, lat]));
+        if (t >= 1) clearInterval(courierMoveInterval);
+      }, 100);
+    }, 250);
+  }
+
+  function stopCourierTracking() {
+    clearInterval(courierMoveInterval);
   }
 
   orderStatusCloseBtn.addEventListener('click', closeOrderStatusModal);
@@ -1113,6 +1457,7 @@
     reviewTextInput.value = '';
     renderReviewsModal();
     renderCatalog(currentCategory);
+    unlockBadge('reviewer');
     showNotification('success', 'Спасибо!', 'Ваш отзыв опубликован 🎉');
   });
 
@@ -1148,8 +1493,21 @@
     if (isLoggedIn) {
       userData.bonuses += bonusEarned - bonusDiscount;
       if (userData.bonuses < 0) userData.bonuses = 0;
+      lifetimeBonusEarned += bonusEarned;
       bonusText = `\nБонус начислен: ${bonusEarned} ₽\nВсего бонусов: ${userData.bonuses} ₽`;
       userData.orders.unshift(newOrder);
+
+      const ordersCount = incrementLifetimeOrdersCount();
+      if (ordersCount >= 1) unlockBadge('first_order');
+      if (ordersCount >= 5) unlockBadge('five_orders');
+      if (ordersCount >= 10) unlockBadge('ten_orders');
+
+      const orderHour = new Date().getHours();
+      if (orderHour >= 22 || orderHour < 5) unlockBadge('night_owl');
+      if (finalTotal >= 2000) unlockBadge('big_spender');
+      if (promoCode === 'КОМБО15' || promoCode === 'COMBO15') unlockBadge('combo_master');
+
+      updateLoyaltyUI();
     }
 
     let cashDetail = '';
@@ -1299,18 +1657,6 @@
         promoMessage.className = 'promo-message error';
         showNotification('error', '❌ Ошибка', 'Добавьте в корзину пиццу, закуску и напиток, чтобы применить комбо');
       }
-    } else if (code === 'ДРУГ100' || code === 'FRIEND100') {
-      promoApplied = true;
-      promoDiscount = 10;
-      freePizza = false;
-      promoCode = code;
-      promoMessage.textContent = '👥 Скидка 10% по приглашению друга применена!';
-      promoMessage.className = 'promo-message success';
-      renderCatalog(currentCategory);
-      renderCart();
-      updateOrderButton();
-      updateSummary();
-      showNotification('success', '👥 Приведи друга', 'Скидка 10% применена! Пригласивший получит 100 бонусов после вашего заказа.');
     } else if (code) {
       promoMessage.textContent = '❌ Неверный промокод';
       promoMessage.className = 'promo-message error';
@@ -1390,6 +1736,9 @@
       bonusDisplay.textContent = `${userData.bonuses} ₽`;
       discountDisplay.textContent = `${userData.discount}%`;
       savedCardDisplay.textContent = userData.savedCard || 'Не сохранена';
+      if (referralCodeDisplay) referralCodeDisplay.textContent = userData.referralCode || '—';
+      updateLoyaltyUI();
+      renderBadges();
 
       ordersList.innerHTML = '';
       if (userData.orders.length === 0) {
@@ -1423,6 +1772,15 @@
     }
   }
 
+  function generateReferralCode(name) {
+    const base = (name || 'ПИКМИ')
+      .toUpperCase()
+      .replace(/[^А-ЯA-Z]/g, '')
+      .slice(0, 4) || 'ГОСТЬ';
+    const digits = Math.floor(1000 + Math.random() * 9000);
+    return base + digits;
+  }
+
   function login() {
     const phone = document.getElementById('loginPhone').value;
     const code = document.getElementById('loginCode').value;
@@ -1431,6 +1789,7 @@
       isLoggedIn = true;
       userData.name = 'Анна';
       userData.phone = phone;
+      if (!userData.referralCode) userData.referralCode = generateReferralCode(userData.name);
       updateProfileUI();
       showNotification('success', '✅ Вход выполнен', `Добро пожаловать, ${userData.name}!`);
       showCatalog();
@@ -1442,6 +1801,7 @@
   function register() {
     const name = document.getElementById('regName').value;
     const phone = document.getElementById('regPhone').value;
+    const friendCode = document.getElementById('regReferralCode').value.trim().toUpperCase();
     const regConsent = document.getElementById('regConsent');
 
     if (regConsent && !regConsent.checked) {
@@ -1456,8 +1816,18 @@
       userData.bonuses = 100;
       userData.discount = 5;
       userData.savedCard = '**** 4589';
-      updateProfileUI();
-      showNotification('success', '✅ Регистрация выполнена', `Добро пожаловать, ${name}! Вам начислено 100 бонусов 🎉`);
+      userData.referralCode = generateReferralCode(name);
+
+      if (friendCode) {
+        userData.referredBy = friendCode;
+        userData.bonuses += 50;
+        lifetimeBonusEarned += 50;
+        updateProfileUI();
+        showNotification('success', '✅ Регистрация выполнена', `Добро пожаловать, ${name}! По реферальному коду начислено +50 бонусов сверху — итого 150 бонусов 🎉 Пригласивший друг получит 100 бонусов после вашего первого заказа.`);
+      } else {
+        updateProfileUI();
+        showNotification('success', '✅ Регистрация выполнена', `Добро пожаловать, ${name}! Вам начислено 100 бонусов 🎉`);
+      }
       showCatalog();
     } else {
       showNotification('error', '❌ Ошибка', 'Пожалуйста, заполните все поля');
@@ -1847,7 +2217,348 @@
     });
   }
 
+  // ---------- КОЛЕСО УДАЧИ ----------
+  const WHEEL_PRIZES = [
+    { icon: '🎁', label: 'Скидка 5%', short: '−5%', type: 'discount', value: 5, weight: 20 },
+    { icon: '🎉', label: '+50 бонусов', short: '+50', type: 'bonus', value: 50, weight: 18 },
+    { icon: '🍀', label: 'Скидка 10%', short: '−10%', type: 'discount', value: 10, weight: 14 },
+    { icon: '🙃', label: 'Повезёт завтра', short: 'Мимо', type: 'none', value: 0, weight: 16 },
+    { icon: '💎', label: '+100 бонусов', short: '+100', type: 'bonus', value: 100, weight: 10 },
+    { icon: '🔥', label: 'Скидка 15%', short: '−15%', type: 'discount', value: 15, weight: 8 },
+    { icon: '🍕', label: 'Пицца в подарок', short: 'Пицца', type: 'freepizza', value: 0, weight: 4 },
+    { icon: '⭐', label: 'Скидка 7%', short: '−7%', type: 'discount', value: 7, weight: 10 }
+  ];
+  const WHEEL_COLORS = ['#ff2e7e', '#ffc93c', '#ff7aa8', '#ffe7a8', '#e8203c', '#ffd166', '#ff9ec0', '#ffd6e6'];
+  const WHEEL_STORAGE_KEY = 'pikmi-wheel-last-spin';
+  let wheelIsSpinning = false;
+  let wheelCurrentRotation = 0;
+
+  function renderWheelSvg() {
+    if (!wheelGroup) return;
+    const cx = 160, cy = 160, r = 152;
+    const n = WHEEL_PRIZES.length;
+    const sectorAngle = 360 / n;
+    const pt = (radius, deg) => {
+      const rad = deg * Math.PI / 180;
+      return [cx + radius * Math.sin(rad), cy - radius * Math.cos(rad)];
+    };
+    const textStyle = 'fill:#fff;stroke:#3a1024;stroke-width:4.5px;paint-order:stroke;stroke-linejoin:round;text-anchor:middle;dominant-baseline:middle;font-family:Baloo 2,Segoe UI,sans-serif;font-weight:800;';
+    let svg = '';
+    for (let i = 0; i < n; i++) {
+      const [x0, y0] = pt(r, i * sectorAngle);
+      const [x1, y1] = pt(r, (i + 1) * sectorAngle);
+      const mid = i * sectorAngle + sectorAngle / 2;
+      const [ex, ey] = pt(118, mid);
+      const [tx, ty] = pt(80, mid);
+      const color = WHEEL_COLORS[i % WHEEL_COLORS.length];
+      svg += `<path d="M${cx},${cy} L${x0.toFixed(1)},${y0.toFixed(1)} A${r},${r} 0 0,1 ${x1.toFixed(1)},${y1.toFixed(1)} Z" fill="${color}" stroke="#3a1024" stroke-width="3"></path>`;
+      svg += `<text x="${ex.toFixed(1)}" y="${ey.toFixed(1)}" transform="rotate(${mid.toFixed(1)} ${ex.toFixed(1)} ${ey.toFixed(1)})" style="font-size:28px;dominant-baseline:middle;text-anchor:middle;">${WHEEL_PRIZES[i].icon}</text>`;
+      svg += `<text x="${tx.toFixed(1)}" y="${ty.toFixed(1)}" transform="rotate(${mid.toFixed(1)} ${tx.toFixed(1)} ${ty.toFixed(1)})" style="${textStyle}font-size:21px;">${WHEEL_PRIZES[i].short}</text>`;
+    }
+    svg += `<circle cx="${cx}" cy="${cy}" r="26" fill="#fff3e6" stroke="#3a1024" stroke-width="4"></circle>`;
+    svg += `<text x="${cx}" y="${cy + 1}" style="font-size:24px;dominant-baseline:middle;text-anchor:middle;">💗</text>`;
+    wheelGroup.innerHTML = svg;
+
+    const legend = document.getElementById('wheelLegend');
+    if (legend) {
+      legend.innerHTML = WHEEL_PRIZES.map(p => `<span class="wheel-legend-chip">${p.icon} ${p.label}</span>`).join('');
+    }
+  }
+
+  function getTodayStr() {
+    return new Date().toISOString().slice(0, 10);
+  }
+
+  function hasSpunToday() {
+    return localStorage.getItem(WHEEL_STORAGE_KEY) === getTodayStr();
+  }
+
+  function updateWheelAvailability() {
+    if (!wheelFabBadge) return;
+    if (hasSpunToday()) {
+      wheelFabBadge.classList.add('hidden');
+    } else {
+      wheelFabBadge.classList.remove('hidden');
+    }
+  }
+
+  function pickWeightedPrizeIndex() {
+    const total = WHEEL_PRIZES.reduce((sum, p) => sum + p.weight, 0);
+    let rnd = Math.random() * total;
+    for (let i = 0; i < WHEEL_PRIZES.length; i++) {
+      rnd -= WHEEL_PRIZES[i].weight;
+      if (rnd <= 0) return i;
+    }
+    return WHEEL_PRIZES.length - 1;
+  }
+
+  // Лёгкий "дзынь" через Web Audio API — без внешних звуковых файлов
+  function playChime(success) {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      const ctx = new AudioCtx();
+      const notes = success ? [523.25, 659.25, 783.99, 1046.5] : [392, 330];
+      notes.forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.001, ctx.currentTime);
+        const start = ctx.currentTime + i * 0.11;
+        gain.gain.exponentialRampToValueAtTime(0.18, start + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, start + 0.35);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(start);
+        osc.stop(start + 0.4);
+      });
+    } catch (e) { /* тихо игнорируем, если звук не поддерживается */ }
+  }
+
+  function launchConfetti() {
+    const colors = ['#ff6b9d', '#c084e8', '#ffd166', '#7ddfa0', '#8fd3ff'];
+    const count = 40;
+    for (let i = 0; i < count; i++) {
+      const piece = document.createElement('div');
+      piece.className = 'confetti-piece';
+      piece.style.left = Math.random() * 100 + 'vw';
+      piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+      piece.style.animationDuration = (2.2 + Math.random() * 1.3) + 's';
+      piece.style.animationDelay = (Math.random() * 0.3) + 's';
+      piece.style.setProperty('--rot', (Math.random() * 720 - 360) + 'deg');
+      piece.style.width = piece.style.height = (6 + Math.random() * 6) + 'px';
+      document.body.appendChild(piece);
+      setTimeout(() => piece.remove(), 4000);
+    }
+  }
+
+  function applyWheelPrize(prize) {
+    if (prize.type === 'discount') {
+      promoApplied = true;
+      promoDiscount = prize.value;
+      freePizza = false;
+      promoCode = 'WHEEL' + prize.value;
+      renderCatalog(currentCategory);
+      renderCart();
+      updateOrderButton();
+      updateSummary();
+      return `Скидка ${prize.value}% уже применена к вашей корзине — переходите к оформлению заказа!`;
+    }
+    if (prize.type === 'bonus') {
+      userData.bonuses = (userData.bonuses || 0) + prize.value;
+      lifetimeBonusEarned += prize.value;
+      if (bonusDisplay) bonusDisplay.textContent = `${userData.bonuses} ₽`;
+      updateLoyaltyUI();
+      return `Начислено ${prize.value} бонусных рублей на ваш счёт!`;
+    }
+    if (prize.type === 'freepizza') {
+      promoApplied = true;
+      promoDiscount = 0;
+      freePizza = true;
+      promoCode = 'WHEELPIZZA';
+      renderCatalog(currentCategory);
+      renderCart();
+      updateOrderButton();
+      updateSummary();
+      return 'Пицца Маргарита будет добавлена в подарок при следующем заказе!';
+    }
+    return 'В этот раз без приза — но завтра будет новая попытка!';
+  }
+
+  function spinWheel() {
+    if (wheelIsSpinning || hasSpunToday()) return;
+    wheelIsSpinning = true;
+    wheelSpinBtn.disabled = true;
+    wheelStatus.textContent = 'Крутим... 🎡';
+    unlockBadge('wheel_player');
+
+    const targetIndex = pickWeightedPrizeIndex();
+    const sectorAngle = 360 / WHEEL_PRIZES.length;
+    const landingOffset = sectorAngle * targetIndex + sectorAngle / 2;
+    const extraSpins = 5;
+    wheelCurrentRotation += extraSpins * 360 + (360 - landingOffset) - (wheelCurrentRotation % 360);
+    wheelSvg.style.transform = `rotate(${wheelCurrentRotation}deg)`;
+
+    setTimeout(() => {
+      const prize = WHEEL_PRIZES[targetIndex];
+      const won = prize.type !== 'none';
+      playChime(won);
+      if (won) launchConfetti();
+
+      localStorage.setItem(WHEEL_STORAGE_KEY, getTodayStr());
+      updateWheelAvailability();
+
+      wheelResultEmoji.textContent = prize.icon;
+      wheelResultTitle.textContent = won ? prize.label : 'Почти повезло!';
+      wheelResultText.textContent = applyWheelPrize(prize);
+      wheelResult.style.display = 'block';
+      wheelStatus.style.display = 'none';
+      wheelSpinBtn.style.display = 'none';
+
+      wheelIsSpinning = false;
+    }, 4300);
+  }
+
+  if (wheelFabBtn && wheelModal) {
+    renderWheelSvg();
+    updateWheelAvailability();
+
+    wheelFabBtn.addEventListener('click', function () {
+      wheelModal.classList.add('open');
+      wheelResult.style.display = 'none';
+      wheelStatus.style.display = 'block';
+      wheelSpinBtn.style.display = 'inline-block';
+      if (hasSpunToday()) {
+        wheelSpinBtn.disabled = true;
+        wheelStatus.textContent = '✅ Вы уже крутили колесо сегодня — заходите завтра!';
+      } else {
+        wheelSpinBtn.disabled = false;
+        wheelStatus.textContent = 'Один раз в день — крутите колесо и получайте приз!';
+      }
+    });
+
+    wheelCloseBtn.addEventListener('click', () => wheelModal.classList.remove('open'));
+    wheelModal.addEventListener('click', (e) => {
+      if (e.target === wheelModal) wheelModal.classList.remove('open');
+    });
+    wheelSpinBtn.addEventListener('click', spinWheel);
+    wheelResultCloseBtn.addEventListener('click', () => wheelModal.classList.remove('open'));
+  }
+
   document.getElementById('openFeedbackBtn').addEventListener('click', openFeedbackModal);
+
+  // ---------- ПРОГРЕСС УРОВНЯ ЛОЯЛЬНОСТИ ----------
+  const LOYALTY_TIERS = [
+    { name: 'Bronze', icon: '🥉', threshold: 0, discount: 5 },
+    { name: 'Silver', icon: '🥈', threshold: 300, discount: 7 },
+    { name: 'Gold', icon: '🥇', threshold: 800, discount: 10 },
+    { name: 'Platinum', icon: '💎', threshold: 2000, discount: 15 }
+  ];
+  let lifetimeBonusEarned = userData.bonuses;
+
+  function getLoyaltyInfo() {
+    let current = LOYALTY_TIERS[0];
+    let next = null;
+    for (let i = 0; i < LOYALTY_TIERS.length; i++) {
+      if (lifetimeBonusEarned >= LOYALTY_TIERS[i].threshold) {
+        current = LOYALTY_TIERS[i];
+        next = LOYALTY_TIERS[i + 1] || null;
+      }
+    }
+    return { current, next };
+  }
+
+  function updateLoyaltyUI() {
+    if (!loyaltyTierIcon) return;
+    const { current, next } = getLoyaltyInfo();
+    userData.discount = current.discount;
+    loyaltyTierIcon.textContent = current.icon;
+    loyaltyTierName.textContent = current.name;
+    if (discountDisplay) discountDisplay.textContent = `${current.discount}%`;
+
+    if (next) {
+      const span = next.threshold - current.threshold;
+      const progressed = lifetimeBonusEarned - current.threshold;
+      const pct = Math.max(0, Math.min(100, Math.round((progressed / span) * 100)));
+      loyaltyProgressFill.style.width = pct + '%';
+      const remaining = Math.max(0, next.threshold - lifetimeBonusEarned);
+      loyaltyProgressText.textContent = `До статуса ${next.name} ${next.icon} осталось ${remaining} ₽ бонусами`;
+    } else {
+      loyaltyProgressFill.style.width = '100%';
+      loyaltyProgressText.textContent = '🏆 Максимальный уровень! Скидка 15% — навсегда ваша.';
+    }
+  }
+
+  // ---------- ДОСТИЖЕНИЯ ----------
+  const BADGES = [
+    { id: 'first_order', icon: '🍕', name: 'Первый заказ' },
+    { id: 'five_orders', icon: '🔥', name: '5 заказов' },
+    { id: 'ten_orders', icon: '👑', name: '10 заказов' },
+    { id: 'night_owl', icon: '🌙', name: 'Ночной заказ' },
+    { id: 'big_spender', icon: '💸', name: 'Заказ от 2000 ₽' },
+    { id: 'wheel_player', icon: '🎡', name: 'Испытал удачу' },
+    { id: 'combo_master', icon: '🍕🥤', name: 'Комбо-мастер' },
+    { id: 'reviewer', icon: '❤️', name: 'Оставил отзыв' }
+  ];
+  const BADGES_STORAGE_KEY = 'pikmi-badges';
+  const ORDERS_COUNT_KEY = 'pikmi-lifetime-orders';
+
+  function getUnlockedBadges() {
+    try { return JSON.parse(localStorage.getItem(BADGES_STORAGE_KEY)) || []; } catch (e) { return []; }
+  }
+
+  function renderBadges() {
+    if (!badgesGrid) return;
+    const unlocked = getUnlockedBadges();
+    badgesGrid.innerHTML = BADGES.map(b => `
+      <div class="badge-item ${unlocked.includes(b.id) ? 'unlocked' : 'locked'}">
+        <div class="badge-icon">${b.icon}</div>
+        <div class="badge-name">${b.name}</div>
+      </div>
+    `).join('');
+  }
+
+  function unlockBadge(id) {
+    const unlocked = getUnlockedBadges();
+    if (unlocked.includes(id)) return;
+    unlocked.push(id);
+    localStorage.setItem(BADGES_STORAGE_KEY, JSON.stringify(unlocked));
+    const badge = BADGES.find(b => b.id === id);
+    renderBadges();
+    if (badge) {
+      playChime(true);
+      launchConfetti();
+      showSocialToast(badge.icon, '🏆 Новое достижение!', badge.name);
+    }
+  }
+
+  function getLifetimeOrdersCount() {
+    return Number(localStorage.getItem(ORDERS_COUNT_KEY) || '0');
+  }
+
+  function incrementLifetimeOrdersCount() {
+    const n = getLifetimeOrdersCount() + 1;
+    localStorage.setItem(ORDERS_COUNT_KEY, String(n));
+    return n;
+  }
+
+  renderBadges();
+  updateLoyaltyUI();
+
+  // ---------- LIVE-УВЕДОМЛЕНИЯ (СОЦИАЛЬНОЕ ДОКАЗАТЕЛЬСТВО) ----------
+  let socialToastTimer = null;
+
+  function showSocialToast(emoji, title, text) {
+    if (!socialToast) return;
+    socialToastEmoji.textContent = emoji;
+    socialToastTitle.textContent = title;
+    socialToastText.textContent = text;
+    socialToast.classList.add('show');
+    clearTimeout(socialToastTimer);
+    socialToastTimer = setTimeout(() => socialToast.classList.remove('show'), 5000);
+  }
+
+  const SOCIAL_NAMES = ['Ирина', 'Дмитрий', 'Анна', 'Максим', 'Ольга', 'Сергей', 'Юлия', 'Артём', 'Мария', 'Алексей', 'Наталья', 'Павел'];
+  const SOCIAL_DISTRICTS = ['Ленинском районе', 'Мотовилихинском районе', 'Индустриальном районе', 'Свердловском районе', 'Дзержинском районе'];
+  const SOCIAL_TOASTS_MAX = 6;
+  let socialToastsShown = 0;
+
+  function scheduleSocialToast() {
+    if (socialToastsShown >= SOCIAL_TOASTS_MAX) return;
+    const delay = 20000 + Math.random() * 25000;
+    setTimeout(() => {
+      const allPizzas = menuData.pizza.filter(p => !p.isConstructor);
+      const pizza = allPizzas[Math.floor(Math.random() * allPizzas.length)];
+      const name = SOCIAL_NAMES[Math.floor(Math.random() * SOCIAL_NAMES.length)];
+      const district = SOCIAL_DISTRICTS[Math.floor(Math.random() * SOCIAL_DISTRICTS.length)];
+      const minsAgo = 1 + Math.floor(Math.random() * 4);
+      showSocialToast(pizza.emoji, `${name} из Перми`, `Только что заказал(а) «${pizza.name}» в ${district} · ${minsAgo} мин назад`);
+      socialToastsShown++;
+      scheduleSocialToast();
+    }, delay);
+  }
+
+  scheduleSocialToast();
 
   infoModalCloseBtn.addEventListener('click', () => infoModal.classList.remove('open'));
   infoModal.addEventListener('click', (e) => {
@@ -1978,6 +2689,7 @@
 
   // ---------- КАРТА ТОЧЕК САМОВЫВОЗА ----------
   let pickupMapInstance = null;
+  let pickupMapMarkers = null;
 
   function initPickupMap() {
     const mapPointsList = document.getElementById('mapPointsList');
@@ -1995,6 +2707,7 @@
           selectedPickupPointId = Number(btn.dataset.pointId);
           updatePickupAddressValue();
           renderPickupPoints();
+          highlightSelectedMapMarker();
           document.querySelectorAll('.delivery-toggle button').forEach(b => b.classList.remove('active'));
           document.querySelector('.delivery-toggle button[data-type="pickup"]')?.classList.add('active');
           deliveryType = 'pickup';
@@ -2007,11 +2720,57 @@
       });
     }
 
-    if (typeof L === 'undefined') return;
+    if (typeof ol === 'undefined') return;
 
-   
+    if (!pickupMapInstance) {
+      pickupMapInstance = new ol.Map({
+        target: 'pickupMap',
+        layers: [new ol.layer.Tile({ source: new ol.source.OSM() })],
+        controls: ol.control.defaults.defaults({ attribution: false, rotate: false })
+          .extend([new ol.control.Attribution({ collapsible: false })]),
+        interactions: ol.interaction.defaults.defaults({ mouseWheelZoom: false }),
+        view: new ol.View({ center: ol.proj.fromLonLat([56.2502, 58.0105]), zoom: 12 })
+      });
 
-    setTimeout(() => pickupMapInstance.invalidateSize(), 100);
+      pickupMapMarkers = pickupPoints.map(p => {
+        const el = document.createElement('div');
+        el.className = 'map-pin';
+        el.textContent = '🍕';
+        el.title = `${p.address} · ${p.hours}`;
+        el.addEventListener('click', () => {
+          selectedPickupPointId = p.id;
+          updatePickupAddressValue();
+          renderPickupPoints();
+          highlightSelectedMapMarker();
+          document.querySelectorAll('.delivery-toggle button').forEach(b => b.classList.remove('active'));
+          document.querySelector('.delivery-toggle button[data-type="pickup"]')?.classList.add('active');
+          deliveryType = 'pickup';
+          deliveryAddressBlock.style.display = 'none';
+          pickupAddressBlock.style.display = 'block';
+          deliveryAddress.disabled = true;
+          showCart();
+        });
+        pickupMapInstance.addOverlay(new ol.Overlay({
+          element: el,
+          position: ol.proj.fromLonLat([p.lng, p.lat]),
+          positioning: 'bottom-center',
+          offset: [0, -8]
+        }));
+        return { id: p.id, el };
+      });
+      highlightSelectedMapMarker();
+    }
+
+    setTimeout(() => {
+      pickupMapInstance.updateSize();
+      const extent = ol.extent.boundingExtent(pickupPoints.map(p => ol.proj.fromLonLat([p.lng, p.lat])));
+      pickupMapInstance.getView().fit(extent, { padding: [60, 60, 60, 60], maxZoom: 15 });
+    }, 100);
+  }
+
+  function highlightSelectedMapMarker() {
+    if (!pickupMapMarkers) return;
+    pickupMapMarkers.forEach(m => m.el.classList.toggle('selected', m.id === selectedPickupPointId));
   }
 
   // ---------- FAQ АККОРДЕОН ----------
@@ -2086,6 +2845,7 @@
         selectedPickupPointId = Number(input.value);
         updatePickupAddressValue();
         renderPickupPoints();
+        highlightSelectedMapMarker();
         updateOrderButton();
         updateSummary();
       });
