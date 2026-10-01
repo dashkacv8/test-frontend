@@ -59,6 +59,22 @@
     </header>
 
     <section id="catalogPage">
+      <div class="hero3d" id="hero3d">
+        <div class="hero-copy">
+          <div class="hero-kicker">💗 пицца, которая выбирает тебя</div>
+          <h2 class="hero-title">Пикми<br>меня!</h2>
+          <p class="hero-sub">Горячая пицца с доставкой по Перми. Выбирай из меню или собери свою, крути колесо удачи и лови скидки.</p>
+          <div class="hero-actions">
+            <button class="hero-btn hero-btn-primary" id="heroMenuBtn">Смотреть меню</button>
+            <button class="hero-btn hero-btn-yellow" id="heroBuildBtn">🛠️ Собрать свою</button>
+          </div>
+        </div>
+        <div class="hero-stage" id="heroStage">
+          <canvas class="bunny-canvas" id="bunnyCanvas"></canvas>
+          <div class="hero-floor"></div>
+        </div>
+      </div>
+
       <div class="category-tabs" id="categoryTabs">
         <button class="category-tab active" data-category="pizza">🍕 Пицца</button>
         <button class="category-tab" data-category="combo">🎉 Комбо</button>
@@ -286,14 +302,15 @@
         </div>
 
         <div id="loginForm">
-          <input type="text" id="loginPhone" placeholder="Номер телефона" value="+7 999 123-45-67">
-          <input type="text" id="loginCode" placeholder="Код из SMS" value="1234">
+          <input type="text" id="loginPhone" placeholder="Номер телефона">
+          <input type="password" id="loginPassword" placeholder="Пароль">
           <button class="login-btn" id="loginBtn">Войти</button>
         </div>
 
         <div id="registerForm" style="display:none;">
-          <input type="text" id="regName" placeholder="Имя" value="Анна">
-          <input type="text" id="regPhone" placeholder="Номер телефона" value="+7 999 123-45-67">
+          <input type="text" id="regName" placeholder="Имя">
+          <input type="text" id="regPhone" placeholder="Номер телефона">
+          <input type="password" id="regPassword" placeholder="Придумайте пароль (от 4 символов)">
           <input type="text" id="regReferralCode" placeholder="Реферальный код друга (необязательно)">
           <label class="heart-checkbox consent-checkbox" style="margin:12px 0;">
             <input type="checkbox" id="regConsent" checked>
@@ -717,6 +734,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/ol@10/dist/ol.js"></script>
   <script src="js/script.js"></script>
+  <script src="js/pikmi3d.js"></script>
 </body>
 
 </html>

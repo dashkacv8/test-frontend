@@ -452,8 +452,14 @@
 
       if (item.isConstructor) card.classList.add('constructor-card');
 
+      const emojiChars = Array.from(item.emoji || '');
+      const emojiHtml = emojiChars.length > 1
+        ? emojiChars.map(e => `<span>${e}</span>`).join('')
+        : item.emoji;
+      const emojiClass = emojiChars.length > 1 ? ` multi multi-${Math.min(emojiChars.length, 4)}` : '';
+
       card.innerHTML = `
-          <div class="pizza-emoji">${item.emoji}</div>
+          <div class="pizza-emoji${emojiClass}">${emojiHtml}</div>
           <div class="pizza-name">${item.name}</div>
           <div class="pizza-desc">${item.desc}</div>
           ${ratingHtml}
@@ -1239,7 +1245,7 @@
       statusLine1.classList.add('filled');
       orderStatusMessage.textContent = labels.msgStep2;
       order.status = 'onTheWay';
-      if (isLoggedIn) updateProfileUI();
+      if (isLoggedIn) { updateProfileUI(); persistAccount(); }
       if (type === 'delivery') initCourierTracking();
     }, 4000);
 
@@ -1249,7 +1255,7 @@
       statusLine2.classList.add('filled');
       orderStatusMessage.textContent = labels.msgStep3;
       order.status = 'delivered';
-      if (isLoggedIn) updateProfileUI();
+      if (isLoggedIn) { updateProfileUI(); persistAccount(); }
     }, 8000);
 
     orderStatusModal._timers = [t1, t2];
@@ -1496,6 +1502,7 @@
       lifetimeBonusEarned += bonusEarned;
       bonusText = `\nБонус начислен: ${bonusEarned} ₽\nВсего бонусов: ${userData.bonuses} ₽`;
       userData.orders.unshift(newOrder);
+      persistAccount();
 
       const ordersCount = incrementLifetimeOrdersCount();
       if (ordersCount >= 1) unlockBadge('first_order');
@@ -1772,6 +1779,53 @@
     }
   }
 
+  function normalizePhone(phone) {
+    return (phone || '').replace(/\D/g, '');
+  }
+
+  // Простой, НЕ криптографический хеш — только чтобы не хранить пароль
+  // открытым текстом в localStorage. Это фронтенд-демо без настоящего
+  // сервера авторизации, поэтому не годится для реальных чувствительных паролей.
+  function simpleHash(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = (hash * 31 + str.charCodeAt(i)) >>> 0;
+    }
+    return hash.toString(36);
+  }
+
+  function loadAccounts() {
+    try { return JSON.parse(localStorage.getItem('pikmi-accounts') || '{}'); } catch (e) { return {}; }
+  }
+
+  function saveAccounts(accounts) {
+    try { localStorage.setItem('pikmi-accounts', JSON.stringify(accounts)); } catch (e) { /* хранилище недоступно */ }
+  }
+
+  function getAccount(phone) {
+    const accounts = loadAccounts();
+    return accounts[normalizePhone(phone)] || null;
+  }
+
+  // Сохраняет текущие данные вошедшего пользователя в его аккаунт
+  function persistAccount() {
+    if (!isLoggedIn || !userData.phone) return;
+    const accounts = loadAccounts();
+    const key = normalizePhone(userData.phone);
+    const existing = accounts[key] || {};
+    accounts[key] = {
+      passwordHash: existing.passwordHash,
+      name: userData.name,
+      bonuses: userData.bonuses,
+      discount: userData.discount,
+      savedCard: userData.savedCard,
+      referralCode: userData.referralCode,
+      referredBy: userData.referredBy,
+      orders: userData.orders
+    };
+    saveAccounts(accounts);
+  }
+
   function generateReferralCode(name) {
     const base = (name || 'ПИКМИ')
       .toUpperCase()
@@ -1782,56 +1836,99 @@
   }
 
   function login() {
-    const phone = document.getElementById('loginPhone').value;
-    const code = document.getElementById('loginCode').value;
+    const phone = document.getElementById('loginPhone').value.trim();
+    const password = document.getElementById('loginPassword').value;
 
-    if (phone && code) {
-      isLoggedIn = true;
-      userData.name = 'Анна';
-      userData.phone = phone;
-      if (!userData.referralCode) userData.referralCode = generateReferralCode(userData.name);
-      updateProfileUI();
-      showNotification('success', '✅ Вход выполнен', `Добро пожаловать, ${userData.name}!`);
-      showCatalog();
-    } else {
+    if (!phone || !password) {
       showNotification('error', '❌ Ошибка входа', 'Пожалуйста, заполните все поля');
+      return;
     }
+
+    const account = getAccount(phone);
+    if (!account) {
+      showNotification('error', '❌ Аккаунт не найден', 'С этим номером ещё никто не регистрировался — создайте аккаунт на вкладке «Регистрация»');
+      return;
+    }
+    if (account.passwordHash !== simpleHash(password)) {
+      showNotification('error', '❌ Неверный пароль', 'Проверьте номер телефона и пароль');
+      return;
+    }
+
+    isLoggedIn = true;
+    userData.name = account.name;
+    userData.phone = phone;
+    userData.bonuses = account.bonuses;
+    userData.discount = account.discount;
+    userData.savedCard = account.savedCard;
+    userData.referralCode = account.referralCode;
+    userData.referredBy = account.referredBy;
+    userData.orders = account.orders || [];
+    lifetimeBonusEarned = account.bonuses;
+
+    updateProfileUI();
+    showNotification('success', '✅ Вход выполнен', `С возвращением, ${userData.name}!`);
+    showCatalog();
   }
 
   function register() {
-    const name = document.getElementById('regName').value;
-    const phone = document.getElementById('regPhone').value;
+    const name = document.getElementById('regName').value.trim();
+    const phone = document.getElementById('regPhone').value.trim();
+    const password = document.getElementById('regPassword').value;
     const friendCode = document.getElementById('regReferralCode').value.trim().toUpperCase();
     const regConsent = document.getElementById('regConsent');
 
+    if (!name || !phone || !password) {
+      showNotification('error', '❌ Ошибка', 'Пожалуйста, заполните имя, телефон и пароль');
+      return;
+    }
+    if (password.length < 4) {
+      showNotification('error', '❌ Слишком короткий пароль', 'Пароль должен быть не короче 4 символов');
+      return;
+    }
     if (regConsent && !regConsent.checked) {
       showNotification('error', '❌ Ошибка', 'Нужно согласие на обработку персональных данных');
       return;
     }
-
-    if (name && phone) {
-      isLoggedIn = true;
-      userData.name = name;
-      userData.phone = phone;
-      userData.bonuses = 100;
-      userData.discount = 5;
-      userData.savedCard = '**** 4589';
-      userData.referralCode = generateReferralCode(name);
-
-      if (friendCode) {
-        userData.referredBy = friendCode;
-        userData.bonuses += 50;
-        lifetimeBonusEarned += 50;
-        updateProfileUI();
-        showNotification('success', '✅ Регистрация выполнена', `Добро пожаловать, ${name}! По реферальному коду начислено +50 бонусов сверху — итого 150 бонусов 🎉 Пригласивший друг получит 100 бонусов после вашего первого заказа.`);
-      } else {
-        updateProfileUI();
-        showNotification('success', '✅ Регистрация выполнена', `Добро пожаловать, ${name}! Вам начислено 100 бонусов 🎉`);
-      }
-      showCatalog();
-    } else {
-      showNotification('error', '❌ Ошибка', 'Пожалуйста, заполните все поля');
+    if (getAccount(phone)) {
+      showNotification('error', '❌ Такой номер уже зарегистрирован', 'Попробуйте войти на вкладке «Вход»');
+      return;
     }
+
+    isLoggedIn = true;
+    userData.name = name;
+    userData.phone = phone;
+    userData.bonuses = 100;
+    userData.discount = 5;
+    userData.savedCard = '**** 4589';
+    userData.referralCode = generateReferralCode(name);
+    userData.orders = [];
+
+    const accounts = loadAccounts();
+    accounts[normalizePhone(phone)] = {
+      passwordHash: simpleHash(password),
+      name: userData.name,
+      bonuses: userData.bonuses,
+      discount: userData.discount,
+      savedCard: userData.savedCard,
+      referralCode: userData.referralCode,
+      referredBy: null,
+      orders: []
+    };
+    saveAccounts(accounts);
+
+    if (friendCode) {
+      userData.referredBy = friendCode;
+      userData.bonuses += 50;
+      lifetimeBonusEarned = userData.bonuses;
+      persistAccount();
+      updateProfileUI();
+      showNotification('success', '✅ Регистрация выполнена', `Добро пожаловать, ${name}! По реферальному коду начислено +50 бонусов сверху — итого 150 бонусов 🎉 Пригласивший друг получит 100 бонусов после вашего первого заказа.`);
+    } else {
+      lifetimeBonusEarned = userData.bonuses;
+      updateProfileUI();
+      showNotification('success', '✅ Регистрация выполнена', `Добро пожаловать, ${name}! Вам начислено 100 бонусов 🎉`);
+    }
+    showCatalog();
   }
 
   function logout() {
@@ -1978,22 +2075,15 @@
   }
 
   // ---------- ИНТЕГРАЦИЯ С DADATA (БЕСПЛАТНО) ----------
-  const DADATA_API_KEY = 'c037b41df093a6c96f63af6c109d56589931f74f';
-
   function searchAddresses(query) {
     if (query.length < 3) {
       addressSuggestions.classList.remove('show');
       return;
     }
 
-    const url = 'https://suggestions.dadata.ru/suggestions/api/4_1/rs/suggest/address';
-
-    fetch(url, {
+    fetch('/api/suggest-address', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Token ' + DADATA_API_KEY
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         query: query,
         count: 7,
@@ -2084,14 +2174,9 @@
         addressHint.textContent = '⏳ Ищем адрес...';
         addressHint.className = 'address-hint loading';
 
-        const url = 'https://suggestions.dadata.ru/suggestions/api/4_1/rs/suggest/address';
-
-        fetch(url, {
+        fetch('/api/suggest-address', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Token ' + DADATA_API_KEY
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             query: query,
             count: 1,
@@ -2251,12 +2336,10 @@
       const [ex, ey] = pt(118, mid);
       const [tx, ty] = pt(80, mid);
       const color = WHEEL_COLORS[i % WHEEL_COLORS.length];
-      svg += `<path d="M${cx},${cy} L${x0.toFixed(1)},${y0.toFixed(1)} A${r},${r} 0 0,1 ${x1.toFixed(1)},${y1.toFixed(1)} Z" fill="${color}" stroke="#3a1024" stroke-width="3"></path>`;
+      svg += `<path d="M${cx},${cy} L${x0.toFixed(1)},${y0.toFixed(1)} A${r},${r} 0 0,1 ${x1.toFixed(1)},${y1.toFixed(1)} Z" fill="${color}" stroke="#ffffff" stroke-opacity="0.65" stroke-width="2"></path>`;
       svg += `<text x="${ex.toFixed(1)}" y="${ey.toFixed(1)}" transform="rotate(${mid.toFixed(1)} ${ex.toFixed(1)} ${ey.toFixed(1)})" style="font-size:28px;dominant-baseline:middle;text-anchor:middle;">${WHEEL_PRIZES[i].icon}</text>`;
       svg += `<text x="${tx.toFixed(1)}" y="${ty.toFixed(1)}" transform="rotate(${mid.toFixed(1)} ${tx.toFixed(1)} ${ty.toFixed(1)})" style="${textStyle}font-size:21px;">${WHEEL_PRIZES[i].short}</text>`;
     }
-    svg += `<circle cx="${cx}" cy="${cy}" r="26" fill="#fff3e6" stroke="#3a1024" stroke-width="4"></circle>`;
-    svg += `<text x="${cx}" y="${cy + 1}" style="font-size:24px;dominant-baseline:middle;text-anchor:middle;">💗</text>`;
     wheelGroup.innerHTML = svg;
 
     const legend = document.getElementById('wheelLegend');
@@ -2349,6 +2432,7 @@
       lifetimeBonusEarned += prize.value;
       if (bonusDisplay) bonusDisplay.textContent = `${userData.bonuses} ₽`;
       updateLoyaltyUI();
+      persistAccount();
       return `Начислено ${prize.value} бонусных рублей на ваш счёт!`;
     }
     if (prize.type === 'freepizza') {
@@ -2968,10 +3052,10 @@
   registerBtn.addEventListener('click', register);
   logoutBtn.addEventListener('click', logout);
 
-  document.getElementById('loginCode').addEventListener('keypress', (e) => {
+  document.getElementById('loginPassword').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') login();
   });
-  document.getElementById('regPhone').addEventListener('keypress', (e) => {
+  document.getElementById('regPassword').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') register();
   });
 
